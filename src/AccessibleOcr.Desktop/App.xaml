@@ -1,0 +1,64 @@
+<Application x:Class="AccessibleOcr.Desktop.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:AccessibleOcr.Desktop.ViewModels"
+             xmlns:views="clr-namespace:AccessibleOcr.Desktop.Views"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <Color x:Key="NavyColor">#123A59</Color>
+        <Color x:Key="BlueColor">#2076C6</Color>
+        <Color x:Key="CanvasColor">#F4F7FA</Color>
+
+        <SolidColorBrush x:Key="NavyBrush" Color="{StaticResource NavyColor}" />
+        <SolidColorBrush x:Key="BlueBrush" Color="{StaticResource BlueColor}" />
+        <SolidColorBrush x:Key="CanvasBrush" Color="{StaticResource CanvasColor}" />
+
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="16,9" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Background" Value="{StaticResource BlueBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Foreground" Value="{StaticResource NavyBrush}" />
+            <Setter Property="BorderBrush" Value="#C7D3DF" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="BorderBrush" Value="#B8C6D4" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+            <views:HomeView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ImportSettingsViewModel}">
+            <views:ImportSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AnalysisViewModel}">
+            <views:AnalysisView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ReviewWorkspaceViewModel}">
+            <views:ReviewWorkspaceView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TableDetailViewModel}">
+            <views:TableDetailView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MathDetailViewModel}">
+            <views:MathDetailView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MusicDetailViewModel}">
+            <views:MusicDetailView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ExportViewModel}">
+            <views:ExportView />
+        </DataTemplate>
+    </Application.Resources>
+</Application>

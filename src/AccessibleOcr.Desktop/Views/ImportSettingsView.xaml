@@ -1,0 +1,83 @@
+<UserControl x:Class="AccessibleOcr.Desktop.Views.ImportSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="0,4,0,22">
+            <TextBlock Text="가져오기 설정" FontSize="28" FontWeight="Bold" Foreground="#18344A" />
+            <TextBlock Text="문서 특성에 맞는 분석 옵션을 선택하세요. 이후 검토 화면에서도 일부 설정을 바꿀 수 있습니다." Margin="0,9,0,0" Foreground="#52697A" />
+        </StackPanel>
+
+        <Border Grid.Row="1" Background="White" CornerRadius="6" Padding="34" BorderBrush="#D7E0E8" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="28" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="문서 분석" FontSize="18" FontWeight="SemiBold" Foreground="#18344A" />
+                    <TextBlock Text="OCR과 구조 인식에 사용할 옵션입니다." Foreground="#607385" Margin="0,5,0,18" />
+
+                    <TextBlock Text="분석 범위" FontWeight="SemiBold" />
+                    <TextBox Margin="0,8,0,18" Text="{Binding PageRange}" automation:AutomationProperties.Name="분석할 페이지 범위" />
+
+                    <TextBlock Text="인식 언어" FontWeight="SemiBold" />
+                    <ComboBox Margin="0,8,0,18" Padding="8,5" SelectedValue="{Binding SelectedLanguage}" SelectedValuePath="Content"
+                              automation:AutomationProperties.Name="OCR 인식 언어">
+                        <ComboBoxItem Content="한국어" />
+                        <ComboBoxItem Content="한국어 + 영어" />
+                        <ComboBoxItem Content="영어" />
+                    </ComboBox>
+
+                    <CheckBox Content="본문·제목·목록" IsChecked="{Binding DetectBody}" Margin="0,0,0,12" />
+                    <CheckBox Content="표·도표" IsChecked="{Binding DetectTables}" Margin="0,0,0,12"
+                              automation:AutomationProperties.Name="표 구조 인식 사용" />
+                    <CheckBox Content="도표 설명" IsChecked="{Binding DetectCharts}" Margin="0,0,0,12" />
+                    <CheckBox Content="수식 인식" IsChecked="{Binding DetectMath}" Margin="0,0,0,12"
+                              automation:AutomationProperties.Name="수식 인식 사용" />
+                    <CheckBox Content="악보 인식" IsChecked="{Binding DetectMusic}"
+                              automation:AutomationProperties.Name="악보 인식 사용" />
+                    <CheckBox Content="이미지·캡션" IsChecked="{Binding DetectImages}" Margin="0,12,0,0" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="문서 처리 위치" FontSize="18" FontWeight="SemiBold" Foreground="#18344A" />
+                    <TextBlock Text="처리 정책은 기관·민감 정보 규칙에 따라 결정됩니다." Foreground="#607385" Margin="0,5,0,18" />
+
+                    <ComboBox Margin="0,0,0,18" Padding="8,5" SelectedValue="{Binding ProcessingPolicy}" SelectedValuePath="Content"
+                              automation:AutomationProperties.Name="문서 처리 정책">
+                        <ComboBoxItem Content="조직 정책에 따라 처리" />
+                        <ComboBoxItem Content="로컬 처리 선호" />
+                        <ComboBoxItem Content="서버 처리 허용" />
+                    </ComboBox>
+
+                    <Border Background="#FFF8E8" BorderBrush="#F1D28D" BorderThickness="1" Padding="16" CornerRadius="4">
+                        <StackPanel>
+                            <TextBlock Text="민감 정보 안내" FontWeight="SemiBold" Foreground="#7A5521" />
+                            <TextBlock Text="민감 정보가 포함된 문서는 분석 시작 전에 처리 정책을 확인하세요. 자동 결과는 검수 전 확정본이 아닙니다." TextWrapping="Wrap" Margin="0,6,0,0" Foreground="#7A5521" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <DockPanel Grid.Row="1" Grid.ColumnSpan="3" Margin="0,30,0,0">
+                    <Button Content="취소" Width="90" Style="{StaticResource SecondaryButton}" Margin="0"
+                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" CommandParameter="Home" />
+                    <Button DockPanel.Dock="Right" Content="분석 시작" Width="128" Margin="0"
+                            Command="{Binding DataContext.StartAnalysisCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                            automation:AutomationProperties.Name="OCR 분석 시작" />
+                </DockPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

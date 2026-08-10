@@ -1,0 +1,62 @@
+<UserControl x:Class="AccessibleOcr.Desktop.Views.AnalysisView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="0,4,0,22">
+            <TextBlock Text="문서 분석" FontSize="28" FontWeight="Bold" Foreground="#18344A" />
+            <TextBlock Text="PDF를 업로드하고 OCR API Job 상태를 조회합니다. 완료 후 DTBook과 검수 사이드카를 가져옵니다." Margin="0,9,0,0" Foreground="#52697A" />
+        </StackPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.9*" />
+                <ColumnDefinition Width="24" />
+                <ColumnDefinition Width="1.1*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="White" Padding="30" CornerRadius="6" BorderBrush="#D7E0E8" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="선택한 PDF 분석" FontSize="19" FontWeight="SemiBold" Foreground="#18344A" />
+                    <TextBlock Text="OCR API 비동기 Job · book.xml + review.json 결과 패키지" Foreground="#607385" Margin="0,7,0,26" />
+
+                    <TextBlock Text="{Binding Progress, StringFormat={}{0}%}" FontSize="38" FontWeight="Bold" Foreground="{StaticResource BlueBrush}" />
+                    <ProgressBar Value="{Binding Progress}" Maximum="100" Height="13" Margin="0,12,0,12"
+                                 automation:AutomationProperties.Name="OCR 분석 진행률" />
+                    <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" Foreground="#34536B"
+                               automation:AutomationProperties.Name="OCR 분석 상태" automation:AutomationProperties.LiveSetting="Polite" />
+
+                    <Button Content="분석 시작" Width="120" Margin="0,30,0,0" HorizontalAlignment="Left" Command="{Binding StartCommand}"
+                            automation:AutomationProperties.Name="OCR 분석 Job 시작" />
+                    <Button Content="검토 화면 열기" Width="140" HorizontalAlignment="Left" IsEnabled="{Binding IsReady}"
+                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" CommandParameter="Review"
+                            automation:AutomationProperties.Name="검토 워크스페이스 열기" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2" Background="White" Padding="30" CornerRadius="6" BorderBrush="#D7E0E8" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="처리 단계" FontSize="19" FontWeight="SemiBold" Foreground="#18344A" />
+                    <TextBlock Text="진행 중 발견된 객체와 경고입니다." Foreground="#607385" Margin="0,7,0,20" />
+                    <TextBlock Text="1. 파일 구조 및 페이지 분리" Margin="0,0,0,14" />
+                    <TextBlock Text="2. 본문 OCR 및 언어 인식" Margin="0,0,0,14" />
+                    <TextBlock Text="3. 표·수식·악보 블록 분류" Margin="0,0,0,14" />
+                    <TextBlock Text="4. 신뢰도 계산 및 저신뢰 큐 생성" Margin="0,0,0,14" />
+                    <TextBlock Text="5. 검토용 문서 초안 생성" Margin="0,0,0,22" />
+                    <Border Background="#F8FBFD" BorderBrush="#BCD0E2" BorderThickness="1" Padding="14" CornerRadius="4">
+                        <StackPanel>
+                            <TextBlock Text="현재까지 발견" FontWeight="SemiBold" Foreground="#18344A" />
+                            <TextBlock Text="{Binding FoundObjects}" TextWrapping="Wrap" Margin="0,7,0,0" Foreground="#34536B"
+                                       automation:AutomationProperties.Name="분석 중 발견한 객체" automation:AutomationProperties.LiveSetting="Polite" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

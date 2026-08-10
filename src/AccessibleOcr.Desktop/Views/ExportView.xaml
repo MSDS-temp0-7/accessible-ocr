@@ -1,0 +1,83 @@
+<UserControl x:Class="AccessibleOcr.Desktop.Views.ExportView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Background="#F4F7FA">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="84" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="76" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Margin="8,21,0,0"
+                   VerticalAlignment="Top"
+                   FontSize="30"
+                   FontWeight="Bold"
+                   Foreground="#0C355B"
+                   Text="검수 완료 / 내보내기" />
+
+        <Grid Grid.Row="1" Margin="8,0,8,0">
+            <Border Padding="28"
+                    Background="White"
+                    BorderBrush="#D8E1EA"
+                    BorderThickness="1"
+                    Visibility="{Binding EmptyStateVisibility}">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="460">
+                    <TextBlock HorizontalAlignment="Center" FontSize="22" FontWeight="Bold" Foreground="#123B61" Text="내보낼 검수 결과가 없습니다." />
+                    <TextBlock Margin="0,14,0,0" HorizontalAlignment="Center" TextAlignment="Center" FontSize="15" Foreground="#536B82"
+                               Text="PDF를 선택하고 OCR 분석이 완료되면 실제 검수 요약과 내보내기 옵션이 이 화면에 표시됩니다." TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border Padding="28"
+                    Background="White"
+                    BorderBrush="#D8E1EA"
+                    BorderThickness="1"
+                    Visibility="{Binding ContentVisibility}">
+                <StackPanel MaxWidth="568" HorizontalAlignment="Left">
+                    <TextBlock FontSize="18" FontWeight="Bold" Foreground="#10385D" Text="검수 요약" />
+                    <TextBlock Margin="0,6,0,16" Foreground="#536B82" Text="{Binding DocumentTitle}" />
+
+                    <Grid Margin="0,0,0,9">
+                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="110" /></Grid.ColumnDefinitions>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Text="문서 구조" />
+                        <TextBlock Grid.Column="1" HorizontalAlignment="Right" Foreground="#16813C" Text="{Binding DocumentStructureStatus}" />
+                    </Grid>
+                    <Separator />
+
+                    <Grid Margin="0,12,0,9">
+                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="110" /></Grid.ColumnDefinitions>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Text="{Binding TableSummary}" />
+                        <TextBlock Grid.Column="1" HorizontalAlignment="Right" Foreground="#16813C" Text="{Binding TableStatus}" />
+                    </Grid>
+                    <Separator />
+
+                    <Grid Margin="0,12,0,9">
+                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="110" /></Grid.ColumnDefinitions>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Text="{Binding FormulaSummary}" />
+                        <TextBlock Grid.Column="1" HorizontalAlignment="Right" Foreground="#B05B00" Text="{Binding FormulaStatus}" />
+                    </Grid>
+                    <Separator />
+
+                    <Grid Margin="0,12,0,9">
+                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="110" /></Grid.ColumnDefinitions>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Text="{Binding MusicSummary}" />
+                        <TextBlock Grid.Column="1" HorizontalAlignment="Right" Foreground="#536B82" Text="{Binding MusicStatus}" />
+                    </Grid>
+
+                    <Border Margin="0,28,0,0" Padding="16,13" Background="#FFF8E9" BorderBrush="#F0B544" BorderThickness="1" CornerRadius="7">
+                        <TextBlock Foreground="#7A4800" TextWrapping="Wrap" Text="{Binding ExportStatus}" />
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2" Background="White" BorderBrush="#D8E1EA" BorderThickness="0,1,0,0">
+            <StackPanel Margin="24,15" HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button Width="110" Height="38" Margin="0,0,10,0"
+                        Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                        CommandParameter="Review" Content="이전" />
+                <Button Width="146" Height="38" Command="{Binding ExportCommand}" Content="내보내기" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

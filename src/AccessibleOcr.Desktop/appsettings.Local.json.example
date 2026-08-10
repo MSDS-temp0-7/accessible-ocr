@@ -1,0 +1,7 @@
+{
+  "OcrApi": {
+    "BaseUrl": "https://your-ocr-api.example.com",
+    "JobsPath": "/api/v1/jobs",
+    "ReviewPathTemplate": "/api/v1/documents/{documentId}/elements/{elementId}/review"
+  }
+}
