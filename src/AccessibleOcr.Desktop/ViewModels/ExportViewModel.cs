@@ -10,6 +10,7 @@ namespace AccessibleOcr.Desktop.ViewModels;
 /// </summary>
 public sealed class ExportViewModel : ObservableObject
 {
+    private readonly bool _canExport;
     private bool _hasDocument;
     private string _documentTitle = string.Empty;
     private string _documentStructureStatus = string.Empty;
@@ -21,9 +22,10 @@ public sealed class ExportViewModel : ObservableObject
     private string _musicStatus = string.Empty;
     private string _exportStatus = string.Empty;
 
-    public ExportViewModel()
+    public ExportViewModel(bool canExport)
     {
-        ExportCommand = new RelayCommand(_ => Export());
+        _canExport = canExport;
+        ExportCommand = new RelayCommand(_ => Export(), _ => _canExport && HasDocument);
     }
 
     public RelayCommand ExportCommand { get; }
@@ -40,6 +42,7 @@ public sealed class ExportViewModel : ObservableObject
 
             OnPropertyChanged(nameof(ContentVisibility));
             OnPropertyChanged(nameof(EmptyStateVisibility));
+            ExportCommand.RaiseCanExecuteChanged();
         }
     }
 

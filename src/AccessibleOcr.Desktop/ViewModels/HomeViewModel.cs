@@ -7,16 +7,18 @@ namespace AccessibleOcr.Desktop.ViewModels;
 public sealed class HomeViewModel : ObservableObject
 {
     private readonly IFilePicker _filePicker;
+    private readonly bool _canImport;
     private string _projectTitle = "새 OCR 프로젝트";
     private string _selectedFileName = "선택된 파일이 없습니다.";
     private string? _selectedFilePath;
     private string _readingMode = "정밀 변환";
     private string _fileStatus = "멀티페이지 PDF를 선택하면 OCR API에 업로드합니다.";
 
-    public HomeViewModel(IFilePicker filePicker)
+    public HomeViewModel(IFilePicker filePicker, bool canImport)
     {
         _filePicker = filePicker;
-        SelectFileCommand = new AsyncRelayCommand(_ => SelectFileAsync());
+        _canImport = canImport;
+        SelectFileCommand = new AsyncRelayCommand(_ => SelectFileAsync(), _ => _canImport);
     }
 
     public string ProjectTitle
@@ -44,6 +46,7 @@ public sealed class HomeViewModel : ObservableObject
     }
 
     public bool HasSelectedFile => !string.IsNullOrWhiteSpace(SelectedFilePath);
+    public bool CanImport => _canImport;
 
     public string ReadingMode
     {

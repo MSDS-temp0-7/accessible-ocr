@@ -39,6 +39,15 @@
         <DataTemplate DataType="{x:Type vm:HomeViewModel}">
             <views:HomeView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LoginViewModel}">
+            <views:LoginView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SignUpViewModel}">
+            <views:SignUpView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MainViewModel}">
+            <views:MainShellView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ImportSettingsViewModel}">
             <views:ImportSettingsView />
         </DataTemplate>

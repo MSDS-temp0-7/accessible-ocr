@@ -7,6 +7,7 @@
 - 제품: OCR 결과를 접근 가능한 구조로 만들고 검수·내보내기하는 Windows 네이티브 앱
 - 플랫폼/UI: Windows 10/11, WPF, .NET 8, XAML, MVVM
 - 현재 단계: 실제 PDF 선택과 HTTP OCR Job 연동을 구현한 통합 단계
+- 인증 단계: 로그인 화면과 HTTP 인증 클라이언트, 회원가입 입력 화면, 메모리 세션, 역할별 UI 권한 골격 구현. 회원가입은 저장하지 않으며 실제 인증 서버와 사용자 DB는 미구현.
 - OCR I/O 기준: 루트의 `IO-SPEC_OCR-Layout-Formula_v0.2.md`
 
 Word 화면설계서와 기존 API 메모가 충돌하면, 화면·MVP 범위·접근성은 Word 설계서를 우선하고 API 메모는 구현 전 정리 대상으로 취급한다.
@@ -17,6 +18,8 @@ Word 화면설계서와 기존 API 메모가 충돌하면, 화면·MVP 범위·�
 - MVP 출력: 구조화 DOCX, 접근 가능한 HTML, 검수 보고서
 - 후속/연동 출력: DAISY, HWP 직접 생성, 음성 파일, 점자악보
 - 앱은 모델을 직접 실행하지 않는다. 로컬 개발에서는 `localhost` OCR API를, 운영에서는 서버 API를 사용한다.
+- 일반 텍스트는 CLOVA OCR, 특수 객체·구조는 모델팀 API가 담당하고 통합 서버가 두 결과를 결합한다.
+- CLOVA/모델 API의 실제 키는 EXE나 Git 추적 파일에 넣지 않는다. 서버 로컬 설정 위치는 `config/integration-api.env`이며 공유용 표본은 `.example` 파일이다.
 - 결과 계약: DAISY3 DTBook `book.xml` + 검수 사이드카 `review.json`.
 - AI 결과: 확정값이 아닌 제안. 원문, AI 제안, 사용자 수정, 검수 상태를 분리해 보인다.
 - 초기 상태에는 샘플 문서나 임의 객체 수를 만들지 않는다. 검수·내보내기 요약은 실제 `book.xml`/`review.json` 결과를 읽은 뒤에만 생성한다.
@@ -47,6 +50,10 @@ WF-01 Home
 - `Infrastructure`: MVVM 공통 코드
 
 View는 Service를 직접 호출하지 않는다. URL, DTO, 인증 토큰, 파일 시스템 경로는 ViewModel에 하드코딩하지 않는다.
+
+로그인 역할은 `READER`, `INSPECTOR`, `VOLUNTEER`를 사용한다. 클라이언트의 버튼 비활성화는 편의 기능일 뿐 보안 경계가 아니며, 실제 통합 서버가 모든 요청에서 권한을 검사해야 한다. Debug의 개발 미리보기는 실제 인증으로 취급하지 않는다.
+
+회원가입 화면에서는 `READER`와 `VOLUNTEER`만 신청할 수 있다. `INSPECTOR`는 관리자 부여 대상으로 유지한다. 회원가입 API 명세는 아직 없으므로 임의 경로를 하드코딩하지 말고 `docs/AUTHENTICATION_INTEGRATION.md`의 미확정 항목을 먼저 결정한다.
 
 ## 상태와 데이터 규칙
 
@@ -84,5 +91,6 @@ Text | Table | Graph | Math | Music | Image
 2. `git status --short`로 기존 변경을 확인하고 덮어쓰지 않는다.
 3. 설계 변경은 문서와 코드 모델을 같은 변경 단위에 포함한다.
 4. `appsettings.json`의 API 경로는 I/O 정의서에 없는 추정값일 수 있다. 모델팀의 실제 OpenAPI가 오면 `HttpDocumentService` 계약을 우선 수정한다.
-5. 외부 의존성 추가 전 이유·라이선스·대체 가능성을 확인한다.
-6. `dotnet build AccessibleOcr.sln` 성공을 최소 검증으로 한다.
+5. 실제 비밀 키가 필요한 경우 `config/integration-api.env.example`을 복사한 로컬 파일만 수정한다.
+6. 외부 의존성 추가 전 이유·라이선스·대체 가능성을 확인한다.
+7. `dotnet build AccessibleOcr.sln` 성공을 최소 검증으로 한다.

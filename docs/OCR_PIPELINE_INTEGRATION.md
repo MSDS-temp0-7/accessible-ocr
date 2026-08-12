@@ -4,6 +4,8 @@
 
 WPF 앱은 OCR 모델을 직접 실행하지 않는다. 사용자가 선택한 멀티페이지 PDF를 OCR API에 업로드하고, 비동기 Job 상태를 조회한 뒤 결과 패키지를 검수 UI로 표시한다.
 
+통합 서버는 CLOVA OCR로 일반 텍스트·좌표·신뢰도를 얻고, 모델팀 API로 문서 구조와 특수 객체를 얻어 하나의 결과 패키지로 결합한다. CLOVA의 Invoke URL과 `X-OCR-SECRET`은 서버 환경변수에만 둔다.
+
 ```text
 PDF 선택
   -> POST /api/v1/jobs (multipart: file, options)
@@ -46,3 +48,9 @@ PDF 선택
 5. 검수 수정·revision 저장 API의 최종 경로와 DTO
 6. 원본 페이지 이미지와 `region_ref`를 내려받는 URL/권한 방식
 
+## 로컬 비밀 설정
+
+- 공유 표본: `config/integration-api.env.example`
+- 실제 로컬 값: `config/integration-api.env` (`.gitignore` 적용)
+- 교체 표식: `REPLACE_WITH_REAL_CLOVA_OCR_SECRET` 등
+- WPF 설정의 `OcrApi.BaseUrl`은 CLOVA 주소가 아니라 우리 통합 서버 주소다.

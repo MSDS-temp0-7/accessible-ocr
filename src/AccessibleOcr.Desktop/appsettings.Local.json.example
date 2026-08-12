@@ -1,7 +1,10 @@
 {
   "OcrApi": {
-    "BaseUrl": "https://your-ocr-api.example.com",
+    "BaseUrl": "http://localhost:8000",
     "JobsPath": "/api/v1/jobs",
     "ReviewPathTemplate": "/api/v1/documents/{documentId}/elements/{elementId}/review"
+  },
+  "Authentication": {
+    "LoginPath": "/auth/login"
   }
 }

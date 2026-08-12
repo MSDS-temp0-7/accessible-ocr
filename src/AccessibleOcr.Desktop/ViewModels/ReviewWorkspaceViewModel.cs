@@ -9,6 +9,7 @@ public sealed class ReviewWorkspaceViewModel : ObservableObject
 {
     private readonly IDocumentService _documentService;
     private readonly Action<string> _openDetail;
+    private readonly bool _canReview;
     private string? _documentId;
     private bool _hasDocument;
     private string _documentTitle = "OCR 결과 패키지를 기다리고 있습니다.";
@@ -16,13 +17,14 @@ public sealed class ReviewWorkspaceViewModel : ObservableObject
     private int _selectedPageNumber = 1;
     private string _saveStatus = "DTBook 요소를 선택하면 검수 내용을 수정할 수 있습니다.";
 
-    public ReviewWorkspaceViewModel(IDocumentService documentService, Action<string> openDetail)
+    public ReviewWorkspaceViewModel(IDocumentService documentService, Action<string> openDetail, bool canReview)
     {
         _documentService = documentService;
         _openDetail = openDetail;
-        MarkReviewedCommand = new AsyncRelayCommand(_ => MarkReviewedAsync(), _ => SelectedBlock is not null);
-        SaveCommand = new AsyncRelayCommand(_ => SaveAsync(), _ => SelectedBlock is not null);
-        OpenDetailCommand = new RelayCommand(_ => OpenDetail(), _ => SelectedBlock is not null && SelectedBlock.Type is BlockType.Table or BlockType.Graph or BlockType.Math or BlockType.Music);
+        _canReview = canReview;
+        MarkReviewedCommand = new AsyncRelayCommand(_ => MarkReviewedAsync(), _ => _canReview && SelectedBlock is not null);
+        SaveCommand = new AsyncRelayCommand(_ => SaveAsync(), _ => _canReview && SelectedBlock is not null);
+        OpenDetailCommand = new RelayCommand(_ => OpenDetail(), _ => _canReview && SelectedBlock is not null && SelectedBlock.Type is BlockType.Table or BlockType.Graph or BlockType.Math or BlockType.Music);
     }
 
     public ObservableCollection<ReviewBlock> Blocks { get; } = [];

@@ -10,22 +10,30 @@ public sealed class MainViewModel : ObservableObject
     private readonly IDocumentService _documentService;
     private object _currentView;
 
-    public MainViewModel(IDocumentService documentService, IFilePicker filePicker)
+    public MainViewModel(IDocumentService documentService, IFilePicker filePicker, AuthenticatedUser currentUser)
     {
         _documentService = documentService;
-        Home = new HomeViewModel(filePicker);
+        CurrentUser = currentUser;
+        Capabilities = UserCapabilities.For(currentUser.Role);
+        Home = new HomeViewModel(filePicker, Capabilities.CanImport);
         ImportSettings = new ImportSettingsViewModel();
         TableDetail = new TableDetailViewModel();
         MathDetail = new MathDetailViewModel();
         MusicDetail = new MusicDetailViewModel();
-        Export = new ExportViewModel();
-        ReviewWorkspace = new ReviewWorkspaceViewModel(documentService, NavigateTo);
+        Export = new ExportViewModel(Capabilities.CanExport);
+        ReviewWorkspace = new ReviewWorkspaceViewModel(documentService, NavigateTo, Capabilities.CanReview);
         Analysis = new AnalysisViewModel(RunPipelineAsync);
 
         _currentView = Home;
-        NavigateCommand = new RelayCommand(Navigate);
-        StartAnalysisCommand = new RelayCommand(_ => StartAnalysis());
+        NavigateCommand = new RelayCommand(Navigate, CanNavigate);
+        StartAnalysisCommand = new RelayCommand(_ => StartAnalysis(), _ => Capabilities.CanImport);
     }
+
+    public AuthenticatedUser CurrentUser { get; }
+    public UserCapabilities Capabilities { get; }
+    public bool CanImport => Capabilities.CanImport;
+    public bool CanReview => Capabilities.CanReview;
+    public bool CanExport => Capabilities.CanExport;
 
     public HomeViewModel Home { get; }
     public ImportSettingsViewModel ImportSettings { get; }
@@ -47,8 +55,26 @@ public sealed class MainViewModel : ObservableObject
 
     private void Navigate(object? destination) => NavigateTo(destination?.ToString() ?? "Home");
 
+    private bool CanNavigate(object? destination)
+    {
+        return destination?.ToString() switch
+        {
+            "ImportSettings" or "Analysis" => CanImport,
+            "Review" or "TableDetail" or "MathDetail" or "MusicDetail" => CanReview,
+            "Export" => CanExport,
+            _ => true
+        };
+    }
+
     private void NavigateTo(string destination)
     {
+        if (!CanNavigate(destination))
+        {
+            Home.FileStatus = "현재 계정에는 이 기능을 사용할 권한이 없습니다.";
+            CurrentView = Home;
+            return;
+        }
+
         if (destination == "Review" && !ReviewWorkspace.HasDocument)
         {
             Home.FileStatus = "검수 작업공간은 실제 OCR 결과 패키지를 받은 뒤 열 수 있습니다.";

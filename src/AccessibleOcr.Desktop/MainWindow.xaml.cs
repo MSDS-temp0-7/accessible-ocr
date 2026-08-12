@@ -11,6 +11,9 @@ public partial class MainWindow : System.Windows.Window
         InitializeComponent();
         var options = OcrApiOptions.Load();
         var httpClient = new HttpClient { BaseAddress = new Uri(options.BaseUrl) };
-        DataContext = new MainViewModel(new HttpDocumentService(httpClient, options), new WindowsFilePicker());
+        DataContext = new AppViewModel(
+            new HttpAuthenticationService(httpClient, options),
+            new HttpDocumentService(httpClient, options),
+            new WindowsFilePicker());
     }
 }

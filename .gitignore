@@ -13,6 +13,9 @@
 # Local application state and secrets
 appsettings.Development.json
 appsettings.Local.json
+.env
+.env.*
+config/integration-api.env
 *.db
 *.db-shm
 *.db-wal
