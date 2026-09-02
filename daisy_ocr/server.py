@@ -13,8 +13,10 @@ import re
 import tempfile
 import uuid
 from dataclasses import dataclass, field
+from email.header import decode_header, make_header
 from pathlib import Path
 from threading import Lock
+from urllib.parse import unquote
 
 import pypdfium2 as pdfium
 from dotenv import load_dotenv
@@ -76,6 +78,15 @@ def _update_job(job: Job, **changes: object) -> None:
     with _jobs_lock:
         for name, value in changes.items():
             setattr(job, name, value)
+
+
+def _decode_upload_filename(value: str) -> str:
+    """RFC 2047/5987로 인코딩된 .NET multipart 파일명을 원래 이름으로 복원한다."""
+    try:
+        decoded = str(make_header(decode_header(value)))
+    except (LookupError, UnicodeDecodeError):
+        decoded = value
+    return unquote(decoded).replace("\\", "/").rsplit("/", 1)[-1]
 
 
 def _selected_page_indexes(page_count: int, value: object) -> list[int]:
@@ -197,7 +208,8 @@ async def create_job(
     file: UploadFile = File(...),
     options: str = Form("{}"),
 ) -> dict:
-    if not file.filename or Path(file.filename).suffix.lower() != ".pdf":
+    decoded_filename = _decode_upload_filename(file.filename or "")
+    if not decoded_filename or Path(decoded_filename).suffix.lower() != ".pdf":
         raise HTTPException(status_code=400, detail="PDF 파일만 처리할 수 있습니다.")
     try:
         parsed_options = json.loads(options)
@@ -212,7 +224,7 @@ async def create_job(
 
     job_id = str(uuid.uuid4())
     document_id = str(uuid.uuid4())
-    job = Job(job_id, document_id, source_path, Path(file.filename).name, parsed_options, workspace / "result.zip")
+    job = Job(job_id, document_id, source_path, decoded_filename, parsed_options, workspace / "result.zip")
     with _jobs_lock:
         _jobs[job_id] = job
         _jobs_by_document[document_id] = job

@@ -32,6 +32,8 @@ PDF를 선택한 WPF 앱이 같은 PC의 Python FastAPI 서버에 비동기 작�
 예상치 못한 UI 예외는 앱을 즉시 종료하지 않고 안내창을 표시하며
 `%LOCALAPPDATA%\AccessibleOcr\logs\app-errors.log`에 기록한다. 분석 진행률은
 읽기 전용 ViewModel 값이므로 `OneWay` 바인딩을 사용한다.
+.NET multipart에서 RFC 방식으로 인코딩되는 한글 PDF 파일명은 로컬 API가
+원래 이름으로 디코딩한 뒤 확장자를 검사한다.
 
 ## 실행 구조
 

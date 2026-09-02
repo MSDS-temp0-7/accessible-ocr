@@ -5,7 +5,7 @@ from xml.etree import ElementTree as ET
 
 from daisy_ocr.output.package import PagePackage, build_result_package
 from daisy_ocr.pipeline import PageElement
-from daisy_ocr.server import _selected_page_indexes
+from daisy_ocr.server import _decode_upload_filename, _selected_page_indexes
 
 
 def test_result_package_contains_wpf_contract_files() -> None:
@@ -48,3 +48,8 @@ def test_special_region_is_always_marked_for_review() -> None:
 def test_page_range_matches_wpf_input() -> None:
     assert _selected_page_indexes(6, "전체 페이지 (1-6)") == [0, 1, 2, 3, 4, 5]
     assert _selected_page_indexes(6, "1-3, 5") == [0, 1, 2, 4]
+
+
+def test_dotnet_encoded_korean_pdf_filename_is_decoded() -> None:
+    encoded = "=?utf-8?B?7KCR6re87ZiVIE9DUiDsoITshqHqsoDsgqwucGRm?="
+    assert _decode_upload_filename(encoded) == "접근형 OCR 전송검사.pdf"
