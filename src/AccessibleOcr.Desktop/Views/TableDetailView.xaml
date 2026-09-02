@@ -5,51 +5,28 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <TextBlock Text="표·도표 상세" FontSize="28" FontWeight="Bold" Foreground="#18344A" />
-        <Border Grid.Row="1" Background="#EAF2FA" BorderBrush="#2C75B9" BorderThickness="1" Padding="16" CornerRadius="5" Margin="0,18,0,20">
+        <Border Grid.Row="1" Background="White" BorderBrush="#D7E0E8" BorderThickness="1"
+                Padding="30" CornerRadius="6" Margin="0,20,0,0">
             <StackPanel>
-                <TextBlock Text="표 1 · 연도별 도서관 이용률" FontSize="20" FontWeight="SemiBold" Foreground="#18344A" />
-                <TextBlock Text="4열 5행. 첫 행은 열 제목입니다. 연도별 이용률이 증가합니다." Margin="0,7,0,0" Foreground="#34536B" />
+                <TextBlock Text="실제 OCR 결과" FontSize="18" FontWeight="SemiBold" Foreground="#18344A" />
+                <TextBlock Text="{Binding SelectedBlock.Id}" Foreground="#607385" Margin="0,8,0,18" />
+                <TextBox Text="{Binding SelectedBlock.Content}" IsReadOnly="True" TextWrapping="Wrap"
+                         AcceptsReturn="True" MinHeight="180" Background="#F7F9FB"
+                         automation:AutomationProperties.Name="선택한 표 또는 도표 OCR 내용" />
+                <TextBlock Margin="0,18,0,0" Foreground="#52697A">
+                    <Run Text="유형 " /><Run Text="{Binding SelectedBlock.Type}" />
+                    <Run Text=" · 페이지 " /><Run Text="{Binding SelectedBlock.PageNumber}" />
+                    <Run Text=" · 신뢰도 " /><Run Text="{Binding SelectedBlock.Confidence, StringFormat={}{0:P0}}" />
+                    <Run Text=" · 상태 " /><Run Text="{Binding SelectedBlock.ReviewStatus}" />
+                </TextBlock>
+                <Border Background="#FFF8E8" BorderBrush="#E6A12C" BorderThickness="1" Padding="16" Margin="0,24,0,0">
+                    <TextBlock Text="영역은 실제로 검출됐지만 표 셀·행·열 구조 또는 그래프 설명 전용 모델은 아직 연결되지 않았습니다. 가짜 셀 데이터는 표시하지 않습니다."
+                               TextWrapping="Wrap" Foreground="#7A5521" />
+                </Border>
             </StackPanel>
-        </Border>
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="38" />
-                <ColumnDefinition Width="360" />
-            </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0">
-                <ListBox ItemsSource="{Binding Modes}" SelectedItem="{Binding SelectedMode}" SelectionMode="Single" Height="45" BorderThickness="0"
-                         automation:AutomationProperties.Name="표 읽기 방식">
-                    <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ListBox.ItemsPanel>
-                    <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem"><Setter Property="Padding" Value="18,9" /><Setter Property="Margin" Value="0,0,12,0" /></Style></ListBox.ItemContainerStyle>
-                </ListBox>
-                <DataGrid ItemsSource="{Binding Rows}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" Margin="0,16,0,0"
-                          automation:AutomationProperties.Name="연도별 도서관 이용률 표">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="구분" Binding="{Binding Category}" Width="*" />
-                        <DataGridTextColumn Header="2022" Binding="{Binding Year2022}" Width="*" />
-                        <DataGridTextColumn Header="2023" Binding="{Binding Year2023}" Width="*" />
-                        <DataGridTextColumn Header="2024" Binding="{Binding Year2024}" Width="*" />
-                    </DataGrid.Columns>
-                </DataGrid>
-            </StackPanel>
-            <Border Grid.Column="2" Background="White" BorderBrush="#D7E0E8" BorderThickness="1" Padding="20" CornerRadius="5">
-                <StackPanel>
-                    <TextBlock Text="현재 위치" FontWeight="SemiBold" Foreground="#607385" />
-                    <TextBlock Text="{Binding CurrentLocation}" FontSize="19" FontWeight="SemiBold" Margin="0,8,0,24" Foreground="#18344A" />
-                    <TextBlock Text="읽기 규칙" FontWeight="SemiBold" Foreground="#607385" />
-                    <TextBlock Text="열 제목 → 행 제목 → 값\n\n방향키: 셀 이동\nCtrl+방향키: 행/열 끝\nEsc: 표 개요로 복귀" TextWrapping="Wrap" Margin="0,8,0,0" Foreground="#34536B" />
-                </StackPanel>
-            </Border>
-        </Grid>
-        <Border Grid.Row="3" Background="#FFF8E8" BorderBrush="#E6A12C" BorderThickness="1" Padding="16" CornerRadius="5" Margin="0,22,0,0">
-            <TextBlock Text="검수 메모: 기본 읽기는 표 전체 개요입니다. 셀 좌표는 상세 탐색에서만 안내합니다." FontWeight="SemiBold" Foreground="#7A5521" />
         </Border>
     </Grid>
 </UserControl>
-

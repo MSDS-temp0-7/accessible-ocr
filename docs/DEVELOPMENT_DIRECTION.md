@@ -14,7 +14,7 @@
 - MVP 출력: 구조화 DOCX, 접근 가능한 HTML, 검수 보고서
 - 후속/연동: DAISY, HWP 직접 출력, 음성 파일, 점자악보, 실시간 공동 편집
 
-OCR/AI 처리가 로컬인지 서버인지 아직 확정하지 않는다. 따라서 UI와 서비스 계약은 처리 위치에 의존하지 않으며, 분석 시작 전 조직 정책과 민감 정보 처리 안내를 제공한다.
+현재 시연 환경은 WPF와 분리된 Python FastAPI 보조 프로세스를 같은 PC에서 실행한다. CLOVA OCR만 외부 API를 호출하고 DocLayout-YOLO는 로컬에서 실행한다. 운영 환경에서 로컬 번들 또는 중앙 서버 중 어느 방식으로 배포할지는 아직 확정하지 않는다.
 
 ## 구현 현황
 
@@ -23,14 +23,14 @@ OCR/AI 처리가 로컬인지 서버인지 아직 확정하지 않는다. 따라
 | 로그인·회원가입·권한 | UI/클라이언트 골격 | `/auth/login` 호출, 회원가입 입력 화면, 메모리 토큰, READER·INSPECTOR·VOLUNTEER 역할별 버튼 제어; 실제 인증 서버·DB 대기 |
 | WF-01 홈 | 실제 연동 준비 | Windows 파일 선택창으로 멀티페이지 PDF 선택, 정밀/빠른 읽기 |
 | WF-02 가져오기 설정 | 구현 | 페이지 범위, 언어, 특수 객체, 처리 정책, 예상 결과 |
-| WF-03 분석 진행 | 실제 연동 구현 | 비동기 OCR Job 업로드·상태 조회·DTBook 패키지 수신 |
-| WF-04 검수 작업공간 | 실제 결과 연결 | `book.xml` 요소와 `review.json` 신뢰도·좌표 사이드카 표시 |
+| WF-03 분석 진행 | 실제 로컬 연동 | FastAPI Job 업로드·상태 조회, CLOVA/DocLayout 처리, DTBook 패키지 수신 |
+| WF-04 검수 작업공간 | 실제 결과 연결 | 임의 수식 UI 제거, `book.xml` 텍스트와 `review.json` 신뢰도·좌표 표시 |
 | WF-05 표·도표 상세 | UI 구현 | 실제 표 구조(F2) 연동 대기 |
 | WF-06 수식 상세 | UI 구현 | MathML·alttext·수식 영역(F4) 연동 대기 |
 | WF-07 악보 상세 | UI 구현 | MusicXML·점자악보(F5) 연동 대기 |
 | WF-08 검수·내보내기 | 실제 결과 연동 | 결과 패키지 수신 전에는 빈 상태만 표시; DTBook 패키징(F11) 및 DOCX/HTML 변환 API 연동 대기 |
 
-현재 앱은 WPF/.NET 8에서 실제 PDF를 선택하고 OCR API에 비동기 Job을 요청하도록 전환했다. API 서버가 없거나 계약이 다르면 분석은 오류 상태를 표시한다. 앱은 모델을 직접 실행하지 않으며, API 주소와 경로는 `src/AccessibleOcr.Desktop/appsettings.json`에서 관리한다.
+현재 앱은 실제 PDF를 로컬 `daisy_ocr.server`에 보내고 결과를 표시한다. API가 꺼져 있거나 CLOVA 설정이 없으면 분석은 오류 상태를 표시하며 가짜 성공 결과를 만들지 않는다. API 주소와 경로는 `src/AccessibleOcr.Desktop/appsettings.json`에서 관리한다.
 
 ## 기술 구조
 
@@ -39,6 +39,7 @@ OCR/AI 처리가 로컬인지 서버인지 아직 확정하지 않는다. 따라
 | 데스크톱 UI | WPF + .NET 8 | Windows 네이티브 UI, XAML, UI Automation |
 | 화면 패턴 | MVVM | View, ViewModel, 데이터 서비스를 분리 |
 | OCR 연동 | HTTP 비동기 Job API | PDF 업로드, 상태 조회, 결과 패키지 수신 |
+| 로컬 처리 | Python 3.11 + FastAPI | CLOVA 호출, DocLayout-YOLO 추론, 결과 병합·직렬화 |
 | 결과 형식 | DAISY3 DTBook + review sidecar | `book.xml`은 구조·판독 순서, `review.json`은 신뢰도·픽셀 좌표 |
 | 로컬 캐시 | SQLite (후속) | 임시 수정본, 최근 프로젝트, 작업 재개 |
 | 배포 | MSIX (후속) | 기관 배포, 업데이트, Windows 알림 |
@@ -103,9 +104,10 @@ WF-01 홈
 
 ## 다음 구현 우선순위
 
-1. 모델팀 API 실제 경로·인증·Job 응답을 `appsettings.json`과 `HttpDocumentService`에 확정 반영
-2. 원본 페이지 이미지와 `review.json` 픽셀 좌표 오버레이
-3. DTBook 편집·검수 저장 API의 revision 충돌 처리
-4. 앱 셸의 F6/Alt 단축키와 포커스 복귀
-5. DTBook 패키징, 구조화 DOCX·접근 가능한 HTML 내보내기
-6. Narrator, 200% 확대, 고대비 자동·수동 테스트
+1. CLOVA 실제 키로 1~3페이지 PDF 종단 간 시연과 오류 메시지 점검
+2. 모델팀 표·수식·그래프·악보 변환 결과를 `TranscribedRegion` 계약에 연결
+3. 원본 페이지 이미지와 `review.json` 픽셀 좌표 오버레이
+4. SQLite 또는 중앙 DB에 문서·검수·revision 저장
+5. 실제 로그인·회원가입·권한 서버 연결
+6. 구조화 DOCX·접근 가능한 HTML·완성 DAISY 내보내기
+7. 앱 셸의 F6/Alt 단축키, Narrator, 200% 확대, 고대비 테스트

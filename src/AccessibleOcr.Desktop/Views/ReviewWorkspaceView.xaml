@@ -49,20 +49,67 @@
             <Border Grid.Column="1" Background="#EAF0F5" BorderBrush="#D7E0E8" BorderThickness="0,1,0,1" Padding="26">
                 <Grid>
                     <Border Background="White" Width="510" Height="620" HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="#B9C7D3" BorderThickness="1" Padding="38">
-                        <StackPanel>
-                            <TextBlock Text="문단 흐름 / 원본 페이지 미리보기" FontWeight="SemiBold" Foreground="#607385" HorizontalAlignment="Center" />
-                            <Rectangle Height="22" Fill="#DCE8F1" Margin="0,38,0,13" />
-                            <Rectangle Height="12" Fill="#E8EEF3" Margin="0,0,0,9" />
-                            <Rectangle Height="12" Fill="#E8EEF3" Margin="0,0,0,9" />
-                            <Border BorderBrush="#E6A12C" BorderThickness="3" Height="76" Margin="0,27,0,27" Padding="12">
-                                <StackPanel>
-                                    <TextBlock Text="수식 3 · 인라인 · 신뢰도 76% · 설명 검토 필요" Foreground="#9A5A00" FontWeight="SemiBold" />
-                                    <TextBlock Text="F = m × a" Foreground="#18344A" FontSize="21" FontWeight="Bold" Margin="0,6,0,0" />
-                                </StackPanel>
-                            </Border>
-                            <Rectangle Height="115" Fill="#E8EEF3" Margin="0,0,0,9" />
-                            <TextBlock Text="실제 연동 단계에서 원본 이미지와 정규화된 OCR 좌표가 이 영역에 표시됩니다." TextWrapping="Wrap" Foreground="#607385" FontSize="12" Margin="0,22,0,0" />
-                        </StackPanel>
+                        <Grid>
+                            <TextBlock Text="분석한 PDF에서 요소를 선택하면 실제 OCR 결과가 여기에 표시됩니다."
+                                       TextWrapping="Wrap" TextAlignment="Center" Foreground="#607385"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="320">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedBlock}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedBlock}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Text="선택한 OCR 요소" FontWeight="SemiBold" Foreground="#607385" HorizontalAlignment="Center" />
+                                <Border BorderBrush="#5B8DB8" BorderThickness="2" Margin="0,34,0,24" Padding="18">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedBlock.Id}" Foreground="#18344A" FontWeight="Bold" />
+                                        <TextBlock Margin="0,7,0,0" Foreground="#52697A">
+                                            <Run Text="유형 " />
+                                            <Run Text="{Binding SelectedBlock.Type}" />
+                                            <Run Text=" · 페이지 " />
+                                            <Run Text="{Binding SelectedBlock.PageNumber}" />
+                                            <Run Text=" · 신뢰도 " />
+                                            <Run Text="{Binding SelectedBlock.Confidence, StringFormat={}{0:P0}}" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock Text="인식 내용" FontWeight="SemiBold" Foreground="#18344A" />
+                                <TextBox Text="{Binding SelectedBlock.Content}" Margin="0,9,0,22" MinHeight="180"
+                                         IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True"
+                                         VerticalScrollBarVisibility="Auto" Background="#F7F9FB" />
+                                <TextBlock Foreground="#607385" TextWrapping="Wrap">
+                                    <Run Text="원본 좌표: X " />
+                                    <Run Text="{Binding SelectedBlock.X, StringFormat={}{0:F0}}" />
+                                    <Run Text=", Y " />
+                                    <Run Text="{Binding SelectedBlock.Y, StringFormat={}{0:F0}}" />
+                                    <Run Text=", 너비 " />
+                                    <Run Text="{Binding SelectedBlock.Width, StringFormat={}{0:F0}}" />
+                                    <Run Text=", 높이 " />
+                                    <Run Text="{Binding SelectedBlock.Height, StringFormat={}{0:F0}}" />
+                                </TextBlock>
+                                <Border Background="#F4F7FA" BorderBrush="#D7E0E8" BorderThickness="1" Margin="0,26,0,0" Padding="14">
+                                    <TextBlock Text="현재 단계에서는 OCR 텍스트와 실제 검출 좌표를 표시합니다. PDF 원본 이미지 위 박스 오버레이는 다음 구현 항목입니다."
+                                               TextWrapping="Wrap" Foreground="#607385" FontSize="12" />
+                                </Border>
+                            </StackPanel>
+                        </Grid>
                     </Border>
                 </Grid>
             </Border>

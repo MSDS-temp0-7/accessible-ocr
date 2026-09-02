@@ -6,7 +6,7 @@
 - 보조 초기 시안: `접근형 OCR 앱_WF-01~04.png`
 - 제품: OCR 결과를 접근 가능한 구조로 만들고 검수·내보내기하는 Windows 네이티브 앱
 - 플랫폼/UI: Windows 10/11, WPF, .NET 8, XAML, MVVM
-- 현재 단계: 실제 PDF 선택과 HTTP OCR Job 연동을 구현한 통합 단계
+- 현재 단계: WPF → 로컬 FastAPI → CLOVA OCR + DocLayout-YOLO → 결과 ZIP의 실제 실행 경로 구현
 - 인증 단계: 로그인 화면과 HTTP 인증 클라이언트, 회원가입 입력 화면, 메모리 세션, 역할별 UI 권한 골격 구현. 회원가입은 저장하지 않으며 실제 인증 서버와 사용자 DB는 미구현.
 - OCR I/O 기준: 루트의 `IO-SPEC_OCR-Layout-Formula_v0.2.md`
 
@@ -17,12 +17,27 @@ Word 화면설계서와 기존 API 메모가 충돌하면, 화면·MVP 범위·�
 - MVP 입력: PDF, 이미지, DOCX, HWP
 - MVP 출력: 구조화 DOCX, 접근 가능한 HTML, 검수 보고서
 - 후속/연동 출력: DAISY, HWP 직접 생성, 음성 파일, 점자악보
-- 앱은 모델을 직접 실행하지 않는다. 로컬 개발에서는 `localhost` OCR API를, 운영에서는 서버 API를 사용한다.
-- 일반 텍스트는 CLOVA OCR, 특수 객체·구조는 모델팀 API가 담당하고 통합 서버가 두 결과를 결합한다.
+- WPF 프로세스는 모델을 직접 실행하지 않는다. 현재 `localhost:8000`의 Python 보조 프로세스가 모델을 실행하며, 운영 배치 방식은 미정이다.
+- 일반 텍스트는 CLOVA OCR이 실제 처리한다. DocLayout-YOLO는 특수 객체 위치를 실제 검출하며 표·수식·그래프·악보의 전용 내용 변환은 모델팀 결과 연결 대기다.
 - CLOVA/모델 API의 실제 키는 EXE나 Git 추적 파일에 넣지 않는다. 서버 로컬 설정 위치는 `config/integration-api.env`이며 공유용 표본은 `.example` 파일이다.
 - 결과 계약: DAISY3 DTBook `book.xml` + 검수 사이드카 `review.json`.
 - AI 결과: 확정값이 아닌 제안. 원문, AI 제안, 사용자 수정, 검수 상태를 분리해 보인다.
 - 초기 상태에는 샘플 문서나 임의 객체 수를 만들지 않는다. 검수·내보내기 요약은 실제 `book.xml`/`review.json` 결과를 읽은 뒤에만 생성한다.
+- 검수 화면에 임의 수식·표 내용을 하드코딩하지 않는다. 특수 모델 미연결 상태는 실제 검출 영역에 명시적인 안내와 `needs_review`로 표현한다.
+
+## 현재 로컬 API 코드
+
+- 패키지/실행점: 루트 `pyproject.toml`, `daisy-ocr-api`
+- API: `daisy_ocr/server.py`
+- CLOVA: `daisy_ocr/ocr/clova_engine.py`
+- 레이아웃·병합: `daisy_ocr/layout/`, `daisy_ocr/pipeline.py`
+- 결과 직렬화: `daisy_ocr/output/package.py`
+- 실행 스크립트: `scripts/start-local-ocr.ps1`
+- 시연 절차: `docs/LOCAL_OCR_DEMO.md`
+
+서버 Job과 검수 PATCH는 현재 메모리 저장이며 재시작 시 사라진다. DB와 인증
+서버는 없다. CLOVA 키가 없는 환경에서도 API 기동과 health 확인은 가능하지만
+PDF Job은 실패 상태가 되어야 하며 가짜 결과로 성공시키지 않는다.
 
 ## 화면 흐름
 
@@ -94,3 +109,5 @@ Text | Table | Graph | Math | Music | Image
 5. 실제 비밀 키가 필요한 경우 `config/integration-api.env.example`을 복사한 로컬 파일만 수정한다.
 6. 외부 의존성 추가 전 이유·라이선스·대체 가능성을 확인한다.
 7. `dotnet build AccessibleOcr.sln` 성공을 최소 검증으로 한다.
+8. Python 변경은 `uv build`, 결과 패키지 테스트, 로컬 API `/health`를 함께 확인한다.
+9. 한글 경로 호환 때문에 `uv sync --no-editable`을 유지한다. 편집형 `.pth` 설치로 되돌리지 않는다.

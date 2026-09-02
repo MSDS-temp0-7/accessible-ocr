@@ -8,7 +8,8 @@ public sealed record ProcessingJob(
     string? DocumentId = null,
     string? Error = null)
 {
-    public bool IsCompleted => string.Equals(Status, "done", StringComparison.OrdinalIgnoreCase);
+    public bool IsCompleted =>
+        string.Equals(Status, "done", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Status, "completed", StringComparison.OrdinalIgnoreCase);
     public bool IsFailed => string.Equals(Status, "failed", StringComparison.OrdinalIgnoreCase);
 }
-

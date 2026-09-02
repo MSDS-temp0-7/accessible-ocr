@@ -3,48 +3,29 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore">
     <Grid>
-        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
         <TextBlock Text="수식 상세" FontSize="28" FontWeight="Bold" Foreground="#18344A" />
-        <Grid Grid.Row="1" Margin="0,20,0,0">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0">
-                <Border Background="White" BorderBrush="#D7E0E8" BorderThickness="1" Padding="28" CornerRadius="5">
-                    <StackPanel>
-                        <TextBlock Text="원본 이미지" FontWeight="SemiBold" Foreground="#607385" />
-                        <Border Background="#F4F7FA" BorderBrush="#C7D3DF" BorderThickness="1" Padding="38" Margin="0,18,0,0">
-                            <TextBlock Text="F = m × a" FontSize="40" FontWeight="Bold" HorizontalAlignment="Center" Foreground="#182C3D" />
-                        </Border>
-                    </StackPanel>
-                </Border>
-                <Border Background="White" BorderBrush="#D7E0E8" BorderThickness="1" Padding="28" CornerRadius="5" Margin="0,20,0,0">
-                    <StackPanel>
-                        <TextBlock Text="기호 탐색" FontSize="18" FontWeight="SemiBold" Foreground="#18344A" />
-                        <ItemsControl ItemsSource="{Binding Symbols}" Margin="0,16,0,0" automation:AutomationProperties.Name="수식 기호 목록">
-                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate><DataTemplate><Border BorderBrush="#B8C6D4" BorderThickness="1" Padding="16,12" Margin="0,0,10,10" CornerRadius="4"><TextBlock Text="{Binding}" TextAlignment="Center" FontWeight="SemiBold" /></Border></DataTemplate></ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
+        <Border Grid.Row="1" Background="White" BorderBrush="#D7E0E8" BorderThickness="1"
+                Padding="30" CornerRadius="6" Margin="0,20,0,0">
+            <StackPanel>
+                <TextBlock Text="실제 OCR 결과" FontSize="18" FontWeight="SemiBold" Foreground="#18344A" />
+                <TextBlock Text="{Binding SelectedBlock.Id}" Foreground="#607385" Margin="0,8,0,18" />
+                <TextBox Text="{Binding SelectedBlock.Content}" IsReadOnly="True" TextWrapping="Wrap"
+                         AcceptsReturn="True" MinHeight="180" Background="#F7F9FB"
+                         automation:AutomationProperties.Name="선택한 수식 OCR 내용" />
+                <TextBlock Margin="0,18,0,0" Foreground="#52697A">
+                    <Run Text="페이지 " /><Run Text="{Binding SelectedBlock.PageNumber}" />
+                    <Run Text=" · 신뢰도 " /><Run Text="{Binding SelectedBlock.Confidence, StringFormat={}{0:P0}}" />
+                    <Run Text=" · 상태 " /><Run Text="{Binding SelectedBlock.ReviewStatus}" />
+                </TextBlock>
+                <Border Background="#FFF8E8" BorderBrush="#E6A12C" BorderThickness="1" Padding="16" Margin="0,24,0,0">
+                    <TextBlock Text="수식 영역은 실제로 검출됐지만 MathML·기호 분석 전용 모델은 아직 연결되지 않았습니다. 현재 값은 검수 대상이며 임의 수식은 표시하지 않습니다."
+                               TextWrapping="Wrap" Foreground="#7A5521" />
                 </Border>
             </StackPanel>
-            <StackPanel Grid.Column="2">
-                <Border Background="White" BorderBrush="#D7E0E8" BorderThickness="1" Padding="28" CornerRadius="5">
-                    <StackPanel>
-                        <TextBlock Text="읽기 표현" FontSize="18" FontWeight="SemiBold" Foreground="#18344A" />
-                        <TextBlock Text="선형" Foreground="#607385" Margin="0,18,0,6" />
-                        <TextBox Text="F equals m times a" automation:AutomationProperties.Name="수식 선형 표현" />
-                        <TextBlock Text="자연어" Foreground="#607385" Margin="0,18,0,6" />
-                        <TextBlock Text="힘은 질량 곱하기 가속도" FontSize="18" FontWeight="SemiBold" Foreground="#18344A" />
-                    </StackPanel>
-                </Border>
-                <Border Background="#FFF8E8" BorderBrush="#E6A12C" BorderThickness="1" Padding="28" CornerRadius="5" Margin="0,20,0,0">
-                    <StackPanel>
-                        <TextBlock Text="검수 상태" FontSize="18" FontWeight="SemiBold" Foreground="#9A5A00" />
-                        <TextBlock Text="신뢰도 76%\n기호 1개 확인 필요" FontSize="24" FontWeight="Bold" Margin="0,18,0,20" Foreground="#7A5521" />
-                        <StackPanel Orientation="Horizontal"><Button Content="다시 인식" Style="{StaticResource SecondaryButton}" Width="110" /><Button Content="검수 완료" Width="110" Margin="10,0,0,8" /></StackPanel>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </Grid>
+        </Border>
     </Grid>
 </UserControl>
-

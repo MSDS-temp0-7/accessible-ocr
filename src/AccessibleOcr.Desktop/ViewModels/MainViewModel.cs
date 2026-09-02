@@ -82,6 +82,20 @@ public sealed class MainViewModel : ObservableObject
             return;
         }
 
+        var selectedBlock = ReviewWorkspace.SelectedBlock;
+        if (destination == "TableDetail" && selectedBlock is not null)
+        {
+            TableDetail.Load(selectedBlock);
+        }
+        else if (destination == "MathDetail" && selectedBlock is not null)
+        {
+            MathDetail.Load(selectedBlock);
+        }
+        else if (destination == "MusicDetail" && selectedBlock is not null)
+        {
+            MusicDetail.Load(selectedBlock);
+        }
+
         CurrentView = destination switch
         {
             "ImportSettings" => ImportSettings,

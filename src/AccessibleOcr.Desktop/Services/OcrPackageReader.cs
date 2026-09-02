@@ -92,6 +92,7 @@ public sealed class OcrPackageReader
                 ? rawBbox.EnumerateArray().Select(value => value.GetDouble()).ToArray()
                 : new double[] { 0, 0, 0, 0 };
             var confidence = data.TryGetProperty("confidence", out var confidenceValue) ? confidenceValue.GetDouble() : 0;
+            var reviewStatus = ParseReviewStatus(GetString(data, "review_status"), confidence);
 
             blocks.Add(new ReviewBlock
             {
@@ -107,7 +108,7 @@ public sealed class OcrPackageReader
                 Height = bbox.ElementAtOrDefault(3),
                 Content = textByElementId.TryGetValue(property.Name, out var text) ? text : string.Empty,
                 RegionReference = GetString(data, "region_ref"),
-                ReviewStatus = confidence < 0.8 ? ReviewStatus.NeedsReview : ReviewStatus.Pending
+                ReviewStatus = reviewStatus
             });
         }
 
@@ -122,6 +123,14 @@ public sealed class OcrPackageReader
         "music" => BlockType.Music,
         "image" => BlockType.Image,
         _ => BlockType.Text
+    };
+
+    private static ReviewStatus ParseReviewStatus(string? value, double confidence) => value?.ToLowerInvariant() switch
+    {
+        "reviewed" => ReviewStatus.Reviewed,
+        "needs_review" or "needsreview" => ReviewStatus.NeedsReview,
+        "pending" => ReviewStatus.Pending,
+        _ => confidence < 0.8 ? ReviewStatus.NeedsReview : ReviewStatus.Pending
     };
 
     private static int GetInt(JsonElement element, string propertyName, int defaultValue = 0)

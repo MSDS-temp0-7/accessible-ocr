@@ -20,6 +20,12 @@ config/integration-api.env
 *.db-shm
 *.db-wal
 .dotnet-cli/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+dist/
 Backup/
 UpgradeLog.htm
 
