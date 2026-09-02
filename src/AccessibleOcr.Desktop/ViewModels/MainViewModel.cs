@@ -1,6 +1,7 @@
 using AccessibleOcr.Desktop.Infrastructure;
 using AccessibleOcr.Desktop.Models;
 using AccessibleOcr.Desktop.Services;
+using System.ComponentModel;
 using System.IO;
 
 namespace AccessibleOcr.Desktop.ViewModels;
@@ -26,7 +27,8 @@ public sealed class MainViewModel : ObservableObject
 
         _currentView = Home;
         NavigateCommand = new RelayCommand(Navigate, CanNavigate);
-        StartAnalysisCommand = new RelayCommand(_ => StartAnalysis(), _ => Capabilities.CanImport);
+        StartAnalysisCommand = new RelayCommand(_ => StartAnalysis(), _ => Capabilities.CanImport && !Analysis.IsRunning);
+        Analysis.PropertyChanged += OnAnalysisPropertyChanged;
     }
 
     public AuthenticatedUser CurrentUser { get; }
@@ -34,6 +36,22 @@ public sealed class MainViewModel : ObservableObject
     public bool CanImport => Capabilities.CanImport;
     public bool CanReview => Capabilities.CanReview;
     public bool CanExport => Capabilities.CanExport;
+    public bool HasActiveJob => Analysis.HasStarted;
+    public int ActiveJobProgress => Analysis.Progress;
+    public string ActiveJobMenuLabel => Analysis.IsRunning
+        ? $"진행 중 작업 · {Analysis.Progress}%"
+        : Analysis.IsReady
+            ? "완료된 작업 · 검수 가능"
+            : Analysis.HasStarted
+                ? "최근 작업 · 상태 확인"
+                : "진행 중 작업 없음";
+    public string ActiveJobSummary => Analysis.IsRunning
+        ? Analysis.StatusText
+        : Analysis.IsReady
+            ? "OCR 분석이 완료되었습니다. 검수 화면을 열 수 있습니다."
+            : Analysis.HasStarted
+                ? Analysis.StatusText
+                : "활성 OCR 작업이 없습니다.";
 
     public HomeViewModel Home { get; }
     public ImportSettingsViewModel ImportSettings { get; }
@@ -111,6 +129,12 @@ public sealed class MainViewModel : ObservableObject
 
     private void StartAnalysis()
     {
+        if (Analysis.IsRunning)
+        {
+            CurrentView = Analysis;
+            return;
+        }
+
         if (!Home.HasSelectedFile)
         {
             Home.FileStatus = "분석을 시작하려면 PDF 파일을 먼저 선택하세요.";
@@ -122,6 +146,25 @@ public sealed class MainViewModel : ObservableObject
         ReviewWorkspace.Reset();
         Export.Reset();
         CurrentView = Analysis;
+    }
+
+    private void OnAnalysisPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
+    {
+        if (eventArgs.PropertyName is not (nameof(AnalysisViewModel.Progress)
+            or nameof(AnalysisViewModel.StatusText)
+            or nameof(AnalysisViewModel.IsRunning)
+            or nameof(AnalysisViewModel.IsReady)
+            or nameof(AnalysisViewModel.HasStarted)))
+        {
+            return;
+        }
+
+        Home.SetAnalysisRunning(Analysis.IsRunning);
+        StartAnalysisCommand.RaiseCanExecuteChanged();
+        OnPropertyChanged(nameof(HasActiveJob));
+        OnPropertyChanged(nameof(ActiveJobProgress));
+        OnPropertyChanged(nameof(ActiveJobMenuLabel));
+        OnPropertyChanged(nameof(ActiveJobSummary));
     }
 
     private async Task RunPipelineAsync(IProgress<ProcessingJob> progress, CancellationToken cancellationToken)

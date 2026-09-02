@@ -16,6 +16,12 @@
 
                     <Button Content="새 프로젝트" IsEnabled="{Binding CanImport}" Command="{Binding NavigateCommand}" CommandParameter="Home"
                             automation:AutomationProperties.Name="새 프로젝트 화면으로 이동" />
+                    <Button Content="{Binding ActiveJobMenuLabel}" IsEnabled="{Binding HasActiveJob}"
+                            Command="{Binding NavigateCommand}" CommandParameter="Analysis"
+                            automation:AutomationProperties.Name="진행 중이거나 최근인 OCR 작업 화면 열기" />
+                    <TextBlock Text="{Binding ActiveJobSummary}" Foreground="#C9DAE9" FontSize="11"
+                               TextWrapping="Wrap" Margin="0,0,0,12"
+                               automation:AutomationProperties.LiveSetting="Polite" />
                     <Button Content="최근 파일" Style="{StaticResource SecondaryButton}" Command="{Binding NavigateCommand}" CommandParameter="Home"
                             automation:AutomationProperties.Name="최근 파일 목록으로 이동" />
                     <Button Content="내보낸 파일" IsEnabled="{Binding CanExport}" Style="{StaticResource SecondaryButton}" Command="{Binding NavigateCommand}" CommandParameter="Export"
@@ -43,6 +49,10 @@
             <Border Grid.Row="0" Background="White" BorderBrush="#D9E1E8" BorderThickness="0,0,0,1">
                 <DockPanel Margin="28,0">
                     <TextBlock Text="구조 읽기 / 검수 / 내보내기" VerticalAlignment="Center" Foreground="#607385" />
+                    <Button DockPanel.Dock="Right" Content="{Binding ActiveJobMenuLabel}"
+                            IsEnabled="{Binding HasActiveJob}" Command="{Binding NavigateCommand}" CommandParameter="Analysis"
+                            Style="{StaticResource SecondaryButton}" Margin="14,8,0,8" Padding="14,6"
+                            automation:AutomationProperties.Name="현재 OCR 작업 상태 및 화면 열기" />
                     <TextBlock Text="F1 도움말  |  Alt+1 개요  Alt+2 객체  Alt+3 검수" DockPanel.Dock="Right" VerticalAlignment="Center" Foreground="#607385" FontSize="12" />
                 </DockPanel>
             </Border>

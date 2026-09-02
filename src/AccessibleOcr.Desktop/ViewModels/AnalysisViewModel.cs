@@ -10,6 +10,7 @@ public sealed class AnalysisViewModel : ObservableObject
     private string _statusText = "분석을 시작하면 OCR API Job 상태가 표시됩니다.";
     private bool _isRunning;
     private bool _isReady;
+    private bool _hasStarted;
     private string _foundObjects = "결과 패키지(book.xml + review.json)를 기다리고 있습니다.";
 
     public AnalysisViewModel(Func<IProgress<ProcessingJob>, CancellationToken, Task> runPipelineAsync)
@@ -54,6 +55,12 @@ public sealed class AnalysisViewModel : ObservableObject
         }
     }
 
+    public bool HasStarted
+    {
+        get => _hasStarted;
+        private set => SetProperty(ref _hasStarted, value);
+    }
+
     public string FoundObjects
     {
         get => _foundObjects;
@@ -68,6 +75,7 @@ public sealed class AnalysisViewModel : ObservableObject
         StatusText = "분석 시작을 누르면 PDF를 OCR API에 업로드합니다.";
         FoundObjects = "결과 패키지(book.xml + review.json)를 기다리고 있습니다.";
         IsReady = false;
+        HasStarted = false;
     }
 
     public void SetFoundObjects(IEnumerable<ReviewBlock> blocks)
@@ -78,6 +86,7 @@ public sealed class AnalysisViewModel : ObservableObject
 
     private async Task StartAsync()
     {
+        HasStarted = true;
         IsRunning = true;
         try
         {

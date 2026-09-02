@@ -35,7 +35,7 @@
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                         <TextBlock Text="파일을 여기에 놓거나 선택하세요" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="#18344A" />
                         <TextBlock Text="현재 OCR 파이프라인 입력: 멀티페이지 PDF" Margin="0,8,0,16" HorizontalAlignment="Center" Foreground="#607385" />
-                        <Button Content="PDF 선택" Command="{Binding SelectFileCommand}" Width="140"
+                        <Button Content="PDF 선택" Command="{Binding SelectFileCommand}" IsEnabled="{Binding CanSelectFile}" Width="140"
                                 automation:AutomationProperties.Name="OCR 처리할 파일 선택" />
                         <TextBlock Text="{Binding SelectedFileName}" Margin="0,8,0,0" HorizontalAlignment="Center" Foreground="#34536B" />
                         <TextBlock Text="{Binding FileStatus}" Margin="0,5,0,0" HorizontalAlignment="Center" Foreground="#607385" FontSize="12" TextWrapping="Wrap" />
