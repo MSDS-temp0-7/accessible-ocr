@@ -5,5 +5,4 @@ public sealed record OcrDocumentResult(
     IReadOnlyList<OcrPage> Pages,
     IReadOnlyList<ReviewBlock> Blocks);
 
-public sealed record OcrPage(int PageIndex, int Width, int Height, int Dpi);
-
+public sealed record OcrPage(int PageIndex, int Width, int Height, int Dpi, byte[]? ImageBytes = null);

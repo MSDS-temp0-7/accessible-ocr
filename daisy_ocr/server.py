@@ -7,6 +7,7 @@ book.xml/review.json ZIP 패키지를 반환한다. 작업 상태는 데모 단�
 from __future__ import annotations
 
 import asyncio
+import io
 import json
 import os
 import re
@@ -131,6 +132,13 @@ def _ocr_text_inside(prepared: PreparedPage, region: LayoutRegion) -> str:
     return " ".join(fragments)
 
 
+def _encode_page_preview(image) -> bytes:
+    """검수 화면용 페이지 이미지를 JPEG로 직렬화한다."""
+    output = io.BytesIO()
+    image.save(output, format="JPEG", quality=88, optimize=True)
+    return output.getvalue()
+
+
 def _placeholder_transcriptions(prepared: PreparedPage, options: dict) -> tuple[list[LayoutRegion], list[TranscribedRegion]]:
     notices = {
         "table": "표 영역이 감지되었습니다. 전용 표 구조 분석 전 검수가 필요합니다.",
@@ -185,7 +193,8 @@ async def _process_job(job: Job) -> None:
                 selected_regions, transcribed = _placeholder_transcriptions(prepared, job.options)
                 ocr_blocks = prepared.ocr_blocks if job.options.get("DetectBody", True) else []
                 elements = merge_page(ocr_blocks, selected_regions, transcribed)
-                packages.append(PagePackage(page_index, image.width, image.height, dpi, elements))
+                preview_bytes = await asyncio.to_thread(_encode_page_preview, image)
+                packages.append(PagePackage(page_index, image.width, image.height, dpi, elements, preview_bytes))
             finally:
                 image.close()
 

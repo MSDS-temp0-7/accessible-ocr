@@ -4,8 +4,10 @@ namespace AccessibleOcr.Desktop.Models;
 
 public sealed class ReviewBlock : ObservableObject
 {
+    private const double PreviewMaxWidth = 760;
     private string _content = string.Empty;
     private ReviewStatus _reviewStatus;
+    private bool _isSelectedForOverlay;
 
     public required string Id { get; init; }
     public required int PageNumber { get; init; }
@@ -24,6 +26,21 @@ public sealed class ReviewBlock : ObservableObject
     public double NormalizedY => PageHeight == 0 ? 0 : Y / PageHeight;
     public double NormalizedWidth => PageWidth == 0 ? 0 : Width / PageWidth;
     public double NormalizedHeight => PageHeight == 0 ? 0 : Height / PageHeight;
+    public double PreviewScale => PageWidth <= 0 ? 1 : Math.Min(1, PreviewMaxWidth / PageWidth);
+    public double OverlayX => X * PreviewScale;
+    public double OverlayY => Y * PreviewScale;
+    public double OverlayWidth => Math.Max(4, Width * PreviewScale);
+    public double OverlayHeight => Math.Max(4, Height * PreviewScale);
+    public string TypeDisplayName => Type switch
+    {
+        BlockType.Table => "표",
+        BlockType.Graph => "그림·그래프",
+        BlockType.Math => "수식",
+        BlockType.Music => "악보",
+        BlockType.Image => "이미지",
+        _ => "글"
+    };
+    public string AccessibleName => $"{PageNumber}페이지 {TypeDisplayName}, {Content}";
 
     public string Content
     {
@@ -35,5 +52,11 @@ public sealed class ReviewBlock : ObservableObject
     {
         get => _reviewStatus;
         set => SetProperty(ref _reviewStatus, value);
+    }
+
+    public bool IsSelectedForOverlay
+    {
+        get => _isSelectedForOverlay;
+        set => SetProperty(ref _isSelectedForOverlay, value);
     }
 }

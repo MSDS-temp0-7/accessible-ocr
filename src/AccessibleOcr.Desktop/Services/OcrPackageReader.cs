@@ -32,7 +32,7 @@ public sealed class OcrPackageReader
         {
             var root = review.RootElement;
             var documentId = GetString(root, "document_id") ?? Guid.NewGuid().ToString("N");
-            var pages = ParsePages(root);
+            var pages = ParsePages(root, archive);
             var textByElementId = ParseDtBookText(book);
             var blocks = ParseReviewElements(root, pages, textByElementId);
             var summary = new DocumentSummary(documentId, sourceFileName, DocumentStatus.AiDraft, DateTimeOffset.Now);
@@ -41,7 +41,7 @@ public sealed class OcrPackageReader
         }
     }
 
-    private static IReadOnlyList<OcrPage> ParsePages(JsonElement root)
+    private static IReadOnlyList<OcrPage> ParsePages(JsonElement root, ZipArchive archive)
     {
         var pages = new List<OcrPage>();
         if (!root.TryGetProperty("pages", out var pageArray) || pageArray.ValueKind != JsonValueKind.Array)
@@ -51,14 +51,27 @@ public sealed class OcrPackageReader
 
         foreach (var page in pageArray.EnumerateArray())
         {
+            var imageReference = GetString(page, "image_ref");
+            var imageEntry = string.IsNullOrWhiteSpace(imageReference)
+                ? null
+                : archive.Entries.FirstOrDefault(entry => string.Equals(entry.FullName, imageReference, StringComparison.OrdinalIgnoreCase));
             pages.Add(new OcrPage(
                 GetInt(page, "page_index"),
                 GetInt(page, "width"),
                 GetInt(page, "height"),
-                GetInt(page, "dpi", 300)));
+                GetInt(page, "dpi", 300),
+                imageEntry is null ? null : ReadEntryBytes(imageEntry)));
         }
 
         return pages;
+    }
+
+    private static byte[] ReadEntryBytes(ZipArchiveEntry entry)
+    {
+        using var source = entry.Open();
+        using var output = new MemoryStream();
+        source.CopyTo(output);
+        return output.ToArray();
     }
 
     private static Dictionary<string, string> ParseDtBookText(XDocument book)

@@ -50,7 +50,8 @@ CLOVA 호출은 페이지당 한 번이다. 자동 재시도나 숨은 사전 �
 | 파일 | 현재 책임 | WPF 사용처 |
 | --- | --- | --- |
 | `book.xml` | 요소 ID와 읽기 순서, OCR/특수 영역 텍스트 | 검수 편집 내용 |
-| `review.json` | 페이지 크기, DPI, 유형, 픽셀 좌표, 신뢰도, 검수 상태 | 목록·상태·좌표 표시 |
+| `review.json` | 페이지 크기, DPI, 페이지 이미지 참조, 유형, 픽셀 좌표, 신뢰도, 검수 상태 | 목록·상태·좌표·오버레이 표시 |
+| `pages/page-XXXX.jpg` | 실제 OCR 입력에 사용한 페이지 미리보기 | 중앙 원본 페이지 검수 화면 |
 
 - DTBook `id`와 `review.json.elements`의 키는 같다.
 - `page_index`는 0부터 시작한다.
@@ -102,6 +103,11 @@ TranscribedRegion:
   text        접근 가능한 전사·설명 결과
   error       부분 실패 메시지 또는 null
 ```
+
+`review.json`의 각 `pages[]` 항목에는 이미지가 포함된 경우
+`"image_ref": "pages/page-0001.jpg"`가 추가된다. 좌표는 이 이미지의
+`width`, `height` 픽셀 좌표계와 같으므로 화면에서는 동일 비율로 축소한 뒤
+박스를 겹쳐 그린다. `image_ref`는 하위 호환을 위해 선택값이다.
 
 `daisy_ocr.pipeline.merge_page()`는 전사 엔진에 의존하지 않으므로 모델팀
 결과를 이 구조로 바꾸는 어댑터만 추가하면 된다. 현재 서버의 안내 문구 생성은

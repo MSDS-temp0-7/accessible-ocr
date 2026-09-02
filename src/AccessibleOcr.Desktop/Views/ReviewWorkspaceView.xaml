@@ -20,44 +20,85 @@
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200" />
+                <ColumnDefinition Width="220" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="310" />
+                <ColumnDefinition Width="320" />
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="White" Padding="16" BorderBrush="#D7E0E8" BorderThickness="1,1,0,1" CornerRadius="6,0,0,6">
-                <StackPanel>
-                    <TextBlock Text="페이지" FontWeight="SemiBold" Foreground="#18344A" />
-                    <ListBox ItemsSource="{Binding PageNumbers}" SelectedItem="{Binding SelectedPageNumber}" Margin="0,12,0,24"
-                             automation:AutomationProperties.Name="문서 페이지 목록" />
-                    <TextBlock Text="객체 목록" FontWeight="SemiBold" Foreground="#18344A" />
-                    <ListBox ItemsSource="{Binding Blocks}" SelectedItem="{Binding SelectedBlock}" Margin="0,12,0,0"
-                             automation:AutomationProperties.Name="특수 객체 목록">
+            <Border Grid.Column="0" Background="White" Padding="14" BorderBrush="#D7E0E8" BorderThickness="1,1,0,1" CornerRadius="6,0,0,6">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="120" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="페이지" FontWeight="SemiBold" Foreground="#18344A" />
+                    <ListBox Grid.Row="1" ItemsSource="{Binding PageNumbers}" SelectedItem="{Binding SelectedPageNumber}"
+                             Margin="0,10,0,16" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             automation:AutomationProperties.Name="문서 페이지 목록"
+                             automation:AutomationProperties.HelpText="방향키로 페이지를 선택합니다." />
+
+                    <TextBlock Grid.Row="2" Text="객체 목록" FontWeight="SemiBold" Foreground="#18344A" />
+                    <TextBlock Grid.Row="3" Text="{Binding PageObjectSummary}" Margin="0,5,0,8" FontSize="12" Foreground="#607385"
+                               automation:AutomationProperties.LiveSetting="Polite" />
+                    <ListBox Grid.Row="4" ItemsSource="{Binding PageBlocks}" SelectedItem="{Binding SelectedBlock}"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                             automation:AutomationProperties.Name="선택 페이지 객체 목록"
+                             automation:AutomationProperties.HelpText="선택한 페이지에서 검출된 글, 표, 그림, 수식, 악보 영역입니다.">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Margin="0,4">
+                                <StackPanel Margin="0,4" MinWidth="150">
                                     <TextBlock Text="{Binding Id}" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding Type}" Foreground="#607385" FontSize="12" />
-                                    <TextBlock Text="{Binding Confidence, StringFormat={}{0:P0}}" Foreground="#607385" FontSize="12" />
+                                    <TextBlock Foreground="#607385" FontSize="12">
+                                        <Run Text="{Binding TypeDisplayName}" />
+                                        <Run Text=" · " />
+                                        <Run Text="{Binding Confidence, StringFormat={}{0:P0}}" />
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Content}" Foreground="#607385" FontSize="11"
+                                               TextTrimming="CharacterEllipsis" MaxWidth="165" />
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                </StackPanel>
+                </Grid>
             </Border>
 
-            <Border Grid.Column="1" Background="#EAF0F5" BorderBrush="#D7E0E8" BorderThickness="0,1,0,1" Padding="26">
+            <Border Grid.Column="1" Background="#EAF0F5" BorderBrush="#D7E0E8" BorderThickness="0,1,0,1" Padding="12">
                 <Grid>
-                    <Border Background="White" Width="510" Height="620" HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="#B9C7D3" BorderThickness="1" Padding="38">
-                        <Grid>
-                            <TextBlock Text="분석한 PDF에서 요소를 선택하면 실제 OCR 결과가 여기에 표시됩니다."
-                                       TextWrapping="Wrap" TextAlignment="Center" Foreground="#607385"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="320">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Margin="4,0,4,10">
+                        <TextBlock Text="{Binding PageImageStatus}" Foreground="#34536B" TextWrapping="Wrap"
+                                   automation:AutomationProperties.Name="원본 페이지 미리보기 상태"
+                                   automation:AutomationProperties.LiveSetting="Polite" />
+                        <TextBlock DockPanel.Dock="Right" Text="글 파랑 · 표 초록 · 그림 주황 · 수식 보라 · 악보 빨강"
+                                   Foreground="#607385" FontSize="11" Margin="14,0,0,0" />
+                    </DockPanel>
+
+                    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                  PanningMode="Both" Background="#DDE5EC"
+                                  automation:AutomationProperties.Name="PDF 원본 페이지와 검출 영역">
+                        <Grid Width="{Binding CurrentPage.DisplayWidth}" Height="{Binding CurrentPage.DisplayHeight}"
+                              Background="White" HorizontalAlignment="Center" VerticalAlignment="Top">
+                            <Image Source="{Binding CurrentPage.ImageSource}" Stretch="Fill"
+                                   Width="{Binding CurrentPage.DisplayWidth}" Height="{Binding CurrentPage.DisplayHeight}"
+                                   automation:AutomationProperties.Name="분석에 사용한 PDF 페이지 원본" />
+
+                            <TextBlock Text="{Binding PageImageStatus}" TextWrapping="Wrap" TextAlignment="Center"
+                                       Foreground="#607385" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       MaxWidth="360" Margin="28">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Visibility" Value="Collapsed" />
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedBlock}" Value="{x:Null}">
+                                            <DataTrigger Binding="{Binding HasPageImage}" Value="False">
                                                 <Setter Property="Visibility" Value="Visible" />
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -65,74 +106,116 @@
                                 </TextBlock.Style>
                             </TextBlock>
 
-                            <StackPanel>
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedBlock}" Value="{x:Null}">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
+                            <ItemsControl ItemsSource="{Binding PageBlocks}"
+                                          Width="{Binding CurrentPage.DisplayWidth}" Height="{Binding CurrentPage.DisplayHeight}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <Canvas />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerStyle>
+                                    <Style TargetType="ContentPresenter">
+                                        <Setter Property="Canvas.Left" Value="{Binding OverlayX}" />
+                                        <Setter Property="Canvas.Top" Value="{Binding OverlayY}" />
                                     </Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="선택한 OCR 요소" FontWeight="SemiBold" Foreground="#607385" HorizontalAlignment="Center" />
-                                <Border BorderBrush="#5B8DB8" BorderThickness="2" Margin="0,34,0,24" Padding="18">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding SelectedBlock.Id}" Foreground="#18344A" FontWeight="Bold" />
-                                        <TextBlock Margin="0,7,0,0" Foreground="#52697A">
-                                            <Run Text="유형 " />
-                                            <Run Text="{Binding SelectedBlock.Type}" />
-                                            <Run Text=" · 페이지 " />
-                                            <Run Text="{Binding SelectedBlock.PageNumber}" />
-                                            <Run Text=" · 신뢰도 " />
-                                            <Run Text="{Binding SelectedBlock.Confidence, StringFormat={}{0:P0}}" />
-                                        </TextBlock>
-                                    </StackPanel>
-                                </Border>
-                                <TextBlock Text="인식 내용" FontWeight="SemiBold" Foreground="#18344A" />
-                                <TextBox Text="{Binding SelectedBlock.Content}" Margin="0,9,0,22" MinHeight="180"
-                                         IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True"
-                                         VerticalScrollBarVisibility="Auto" Background="#F7F9FB" />
-                                <TextBlock Foreground="#607385" TextWrapping="Wrap">
-                                    <Run Text="원본 좌표: X " />
-                                    <Run Text="{Binding SelectedBlock.X, StringFormat={}{0:F0}}" />
-                                    <Run Text=", Y " />
-                                    <Run Text="{Binding SelectedBlock.Y, StringFormat={}{0:F0}}" />
-                                    <Run Text=", 너비 " />
-                                    <Run Text="{Binding SelectedBlock.Width, StringFormat={}{0:F0}}" />
-                                    <Run Text=", 높이 " />
-                                    <Run Text="{Binding SelectedBlock.Height, StringFormat={}{0:F0}}" />
-                                </TextBlock>
-                                <Border Background="#F4F7FA" BorderBrush="#D7E0E8" BorderThickness="1" Margin="0,26,0,0" Padding="14">
-                                    <TextBlock Text="현재 단계에서는 OCR 텍스트와 실제 검출 좌표를 표시합니다. PDF 원본 이미지 위 박스 오버레이는 다음 구현 항목입니다."
-                                               TextWrapping="Wrap" Foreground="#607385" FontSize="12" />
-                                </Border>
-                            </StackPanel>
+                                </ItemsControl.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Width="{Binding OverlayWidth}" Height="{Binding OverlayHeight}" Padding="0"
+                                                Command="{Binding DataContext.SelectBlockCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                CommandParameter="{Binding}" ToolTip="{Binding AccessibleName}"
+                                                automation:AutomationProperties.Name="{Binding AccessibleName}">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Background" Value="#160B6FA4" />
+                                                    <Setter Property="BorderBrush" Value="#0B6FA4" />
+                                                    <Setter Property="BorderThickness" Value="2" />
+                                                    <Setter Property="Cursor" Value="Hand" />
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border Background="{TemplateBinding Background}"
+                                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                                        BorderThickness="{TemplateBinding BorderThickness}">
+                                                                    <ContentPresenter />
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Type}" Value="Table">
+                                                            <Setter Property="Background" Value="#163B8F63" />
+                                                            <Setter Property="BorderBrush" Value="#278153" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Type}" Value="Graph">
+                                                            <Setter Property="Background" Value="#16C56A19" />
+                                                            <Setter Property="BorderBrush" Value="#C56A19" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Type}" Value="Image">
+                                                            <Setter Property="Background" Value="#16C56A19" />
+                                                            <Setter Property="BorderBrush" Value="#C56A19" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Type}" Value="Math">
+                                                            <Setter Property="Background" Value="#167743A8" />
+                                                            <Setter Property="BorderBrush" Value="#7743A8" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Type}" Value="Music">
+                                                            <Setter Property="Background" Value="#16B33A3A" />
+                                                            <Setter Property="BorderBrush" Value="#B33A3A" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsSelectedForOverlay}" Value="True">
+                                                            <Setter Property="Background" Value="#35FFD54A" />
+                                                            <Setter Property="BorderBrush" Value="#C58B00" />
+                                                            <Setter Property="BorderThickness" Value="4" />
+                                                        </DataTrigger>
+                                                        <Trigger Property="IsKeyboardFocused" Value="True">
+                                                            <Setter Property="BorderBrush" Value="#111111" />
+                                                            <Setter Property="BorderThickness" Value="4" />
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </Grid>
-                    </Border>
+                    </ScrollViewer>
                 </Grid>
             </Border>
 
             <Border Grid.Column="2" Background="White" Padding="18" BorderBrush="#D7E0E8" BorderThickness="0,1,1,1" CornerRadius="0,6,6,0">
-                <StackPanel>
-                    <TextBlock Text="객체 검사" FontSize="18" FontWeight="SemiBold" Foreground="#18344A" />
-                    <TextBlock Text="{Binding SaveStatus}" TextWrapping="Wrap" Foreground="#607385" Margin="0,7,0,18"
-                               automation:AutomationProperties.Name="블록 편집 상태" automation:AutomationProperties.LiveSetting="Polite" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel>
+                        <TextBlock Text="객체 검사" FontSize="18" FontWeight="SemiBold" Foreground="#18344A" />
+                        <TextBlock Text="{Binding SaveStatus}" TextWrapping="Wrap" Foreground="#607385" Margin="0,7,0,18"
+                                   automation:AutomationProperties.Name="블록 편집 상태" automation:AutomationProperties.LiveSetting="Polite" />
 
-                    <TextBlock Text="인식 결과" FontWeight="SemiBold" />
-                    <TextBox Height="150" Margin="0,8,0,14" TextWrapping="Wrap" AcceptsReturn="True"
-                             Text="{Binding SelectedBlock.Content, UpdateSourceTrigger=PropertyChanged}"
-                             automation:AutomationProperties.Name="선택한 OCR 블록 내용" />
+                        <TextBlock Text="인식 결과" FontWeight="SemiBold" />
+                        <TextBox MinHeight="150" MaxHeight="300" Margin="0,8,0,14" TextWrapping="Wrap" AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Text="{Binding SelectedBlock.Content, UpdateSourceTrigger=PropertyChanged}"
+                                 automation:AutomationProperties.Name="선택한 OCR 블록 내용" />
 
-                    <TextBlock Text="검수 상태" FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding SelectedBlock.ReviewStatus}" Margin="0,8,0,20" Foreground="#34536B" />
-                    <Button Content="상세 열기" Style="{StaticResource SecondaryButton}" Command="{Binding OpenDetailCommand}"
-                            automation:AutomationProperties.Name="선택한 특수 객체 상세 열기" />
-                    <Button Content="수정 저장" Command="{Binding SaveCommand}" automation:AutomationProperties.Name="OCR 블록 수정 내용 저장" />
-                    <Button Content="검토 완료로 표시" Style="{StaticResource SecondaryButton}" Command="{Binding MarkReviewedCommand}"
-                            automation:AutomationProperties.Name="선택한 OCR 블록 검토 완료" />
-                </StackPanel>
+                        <TextBlock Text="검수 상태" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding SelectedBlock.ReviewStatus}" Margin="0,8,0,20" Foreground="#34536B" />
+                        <TextBlock Foreground="#607385" TextWrapping="Wrap" Margin="0,0,0,16">
+                            <Run Text="좌표 X " />
+                            <Run Text="{Binding SelectedBlock.X, StringFormat={}{0:F0}}" />
+                            <Run Text=", Y " />
+                            <Run Text="{Binding SelectedBlock.Y, StringFormat={}{0:F0}}" />
+                            <Run Text=", 너비 " />
+                            <Run Text="{Binding SelectedBlock.Width, StringFormat={}{0:F0}}" />
+                            <Run Text=", 높이 " />
+                            <Run Text="{Binding SelectedBlock.Height, StringFormat={}{0:F0}}" />
+                        </TextBlock>
+                        <Button Content="상세 열기" Style="{StaticResource SecondaryButton}" Command="{Binding OpenDetailCommand}"
+                                automation:AutomationProperties.Name="선택한 특수 객체 상세 열기" />
+                        <Button Content="수정 저장" Command="{Binding SaveCommand}" automation:AutomationProperties.Name="OCR 블록 수정 내용 저장" />
+                        <Button Content="검토 완료로 표시" Style="{StaticResource SecondaryButton}" Command="{Binding MarkReviewedCommand}"
+                                automation:AutomationProperties.Name="선택한 OCR 블록 검토 완료" />
+                    </StackPanel>
+                </ScrollViewer>
             </Border>
         </Grid>
     </Grid>

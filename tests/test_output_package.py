@@ -21,16 +21,19 @@ def test_result_package_contains_wpf_contract_files() -> None:
             bbox=(10, 20, 110, 60),
             confidence=0.93,
         )],
+        image_bytes=b"jpeg-preview",
     )]
 
     package = build_result_package("document-1", "sample.pdf", pages)
     with zipfile.ZipFile(io.BytesIO(package)) as archive:
-        assert set(archive.namelist()) == {"book.xml", "review.json"}
+        assert set(archive.namelist()) == {"book.xml", "review.json", "pages/page-0001.jpg"}
+        assert archive.read("pages/page-0001.jpg") == b"jpeg-preview"
         root = ET.fromstring(archive.read("book.xml"))
         assert "실제 OCR 문장" in "".join(root.itertext())
         review = json.loads(archive.read("review.json"))
 
     element = review["elements"]["p0001-e00001"]
+    assert review["pages"][0]["image_ref"] == "pages/page-0001.jpg"
     assert element["bbox"] == [10, 20, 100, 40]
     assert element["review_status"] == "pending"
 

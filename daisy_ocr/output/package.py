@@ -20,6 +20,7 @@ class PagePackage:
     height: int
     dpi: int
     elements: list[PageElement]
+    image_bytes: bytes | None = None
 
 
 def _review_status(element: PageElement) -> str:
@@ -45,7 +46,11 @@ def build_result_package(document_id: str, title: str, pages: list[PagePackage])
     for page in pages:
         level = ET.SubElement(body, f"{{{DTBOOK_NS}}}level1", {"class": "page"})
         ET.SubElement(level, f"{{{DTBOOK_NS}}}pagenum").text = str(page.page_index + 1)
-        review_pages.append({"page_index": page.page_index, "width": page.width, "height": page.height, "dpi": page.dpi})
+        image_ref = f"pages/page-{page.page_index + 1:04d}.jpg" if page.image_bytes else None
+        review_page = {"page_index": page.page_index, "width": page.width, "height": page.height, "dpi": page.dpi}
+        if image_ref:
+            review_page["image_ref"] = image_ref
+        review_pages.append(review_page)
 
         for sequence, element in enumerate(page.elements):
             element_id = _element_id(page.page_index, sequence)
@@ -70,4 +75,7 @@ def build_result_package(document_id: str, title: str, pages: list[PagePackage])
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("book.xml", xml_bytes)
         archive.writestr("review.json", json.dumps(review, ensure_ascii=False, indent=2).encode("utf-8"))
+        for page in pages:
+            if page.image_bytes:
+                archive.writestr(f"pages/page-{page.page_index + 1:04d}.jpg", page.image_bytes)
     return output.getvalue()

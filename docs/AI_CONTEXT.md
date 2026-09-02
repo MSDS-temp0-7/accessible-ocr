@@ -20,7 +20,7 @@ Word 화면설계서와 기존 API 메모가 충돌하면, 화면·MVP 범위·�
 - WPF 프로세스는 모델을 직접 실행하지 않는다. 현재 `localhost:8000`의 Python 보조 프로세스가 모델을 실행하며, 운영 배치 방식은 미정이다.
 - 일반 텍스트는 CLOVA OCR이 실제 처리한다. DocLayout-YOLO는 특수 객체 위치를 실제 검출하며 표·수식·그래프·악보의 전용 내용 변환은 모델팀 결과 연결 대기다.
 - CLOVA/모델 API의 실제 키는 EXE나 Git 추적 파일에 넣지 않는다. 서버 로컬 설정 위치는 `config/integration-api.env`이며 공유용 표본은 `.example` 파일이다.
-- 결과 계약: DAISY3 DTBook `book.xml` + 검수 사이드카 `review.json`.
+- 결과 계약: DAISY3 DTBook `book.xml` + 검수 사이드카 `review.json` + `pages/page-XXXX.jpg` 검수용 페이지 이미지.
 - AI 결과: 확정값이 아닌 제안. 원문, AI 제안, 사용자 수정, 검수 상태를 분리해 보인다.
 - 초기 상태에는 샘플 문서나 임의 객체 수를 만들지 않는다. 검수·내보내기 요약은 실제 `book.xml`/`review.json` 결과를 읽은 뒤에만 생성한다.
 - 검수 화면에 임의 수식·표 내용을 하드코딩하지 않는다. 특수 모델 미연결 상태는 실제 검출 영역에 명시적인 안내와 `needs_review`로 표현한다.
@@ -95,6 +95,9 @@ Text | Table | Graph | Math | Music | Image
 ```
 
 - 파이프라인의 `review.json`은 0-based `page_index`와 픽셀 `bbox: [x, y, w, h]`를 제공한다. 화면이 페이지 width/height로 정규화한다.
+- 각 `pages[]` 항목의 선택적 `image_ref`는 ZIP 안의 검수용 페이지 JPEG를 가리킨다. WPF는 패키지를 닫기 전에 이미지 bytes를 읽고 `BitmapImage`를 `OnLoad`로 생성·Freeze한다.
+- WF-04는 선택 페이지의 객체만 `PageBlocks`에 표시한다. 페이지 목록, 객체 목록, 중앙 오버레이, 오른쪽 검사 패널의 선택 상태를 동기화한다.
+- 기존 결과 패키지처럼 `image_ref`가 없을 때 임의 이미지를 만들지 말고, 재분석이 필요하다는 빈 상태를 표시한다.
 - 블록 수정 API에는 `revision`을 포함한다.
 - UI 문자열은 한국어로 시작하고, 리소스 분리는 후속 작업으로 남긴다.
 
