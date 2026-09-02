@@ -26,7 +26,7 @@
                     <TextBlock Text="OCR API 비동기 Job · book.xml + review.json 결과 패키지" Foreground="#607385" Margin="0,7,0,26" />
 
                     <TextBlock Text="{Binding Progress, StringFormat={}{0}%}" FontSize="38" FontWeight="Bold" Foreground="{StaticResource BlueBrush}" />
-                    <ProgressBar Value="{Binding Progress}" Maximum="100" Height="13" Margin="0,12,0,12"
+                    <ProgressBar Value="{Binding Progress, Mode=OneWay}" Maximum="100" Height="13" Margin="0,12,0,12"
                                  automation:AutomationProperties.Name="OCR 분석 진행률" />
                     <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" Foreground="#34536B"
                                automation:AutomationProperties.Name="OCR 분석 상태" automation:AutomationProperties.LiveSetting="Polite" />

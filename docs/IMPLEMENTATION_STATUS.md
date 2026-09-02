@@ -16,7 +16,7 @@ PDF를 선택한 WPF 앱이 같은 PC의 Python FastAPI 서버에 비동기 작�
 
 | 영역 | 현재 구현 |
 | --- | --- |
-| Windows 앱 | WPF/.NET 8, PDF 선택, 가져오기 옵션, 진행률, 실제 결과 검수 화면 |
+| Windows 앱 | WPF/.NET 8, PDF 선택, 가져오기 옵션, 진행률, 실제 결과 검수 화면, UI 예외 안내·로그 |
 | 로컬 API | FastAPI, Job 생성·조회·결과 ZIP·검수 PATCH |
 | 일반 OCR | CLOVA General OCR 실제 HTTP 호출, 글자·좌표·신뢰도 변환 |
 | 레이아웃 | DocLayout-YOLO 실제 추론, 표·수식·그림 영역 분류와 중복 제거 |
@@ -28,6 +28,10 @@ PDF를 선택한 WPF 앱이 같은 PC의 Python FastAPI 서버에 비동기 작�
 검수 화면의 예시 수식·신뢰도·문서 내용은 제거됐다. PDF 분석 결과가 없으면
 실제 객체나 검수 건수가 표시되지 않으며, 결과 수신 후에만 텍스트·유형·좌표가
 표시된다.
+
+예상치 못한 UI 예외는 앱을 즉시 종료하지 않고 안내창을 표시하며
+`%LOCALAPPDATA%\AccessibleOcr\logs\app-errors.log`에 기록한다. 분석 진행률은
+읽기 전용 ViewModel 값이므로 `OneWay` 바인딩을 사용한다.
 
 ## 실행 구조
 
