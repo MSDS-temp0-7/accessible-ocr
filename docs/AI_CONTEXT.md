@@ -98,6 +98,9 @@ Text | Table | Graph | Math | Music | Image
 - 각 `pages[]` 항목의 선택적 `image_ref`는 ZIP 안의 검수용 페이지 JPEG를 가리킨다. WPF는 패키지를 닫기 전에 이미지 bytes를 읽고 `BitmapImage`를 `OnLoad`로 생성·Freeze한다.
 - WF-04는 선택 페이지의 객체만 `PageBlocks`에 표시한다. 페이지 목록, 객체 목록, 중앙 오버레이, 오른쪽 검사 패널의 선택 상태를 동기화한다.
 - 기존 결과 패키지처럼 `image_ref`가 없을 때 임의 이미지를 만들지 말고, 재분석이 필요하다는 빈 상태를 표시한다.
+- WF-02 페이지 범위 UI는 `UseAllPages`, `StartPage`, `EndPage`를 사용한다.
+  전체 페이지 선택 시 숫자 입력을 비활성화하고, 유효하지 않은 범위에서는 분석
+  명령을 비활성화한다. 명시한 범위를 서버가 임의로 전체 페이지로 대체하면 안 된다.
 - 블록 수정 API에는 `revision`을 포함한다.
 - UI 문자열은 한국어로 시작하고, 리소스 분리는 후속 작업으로 남긴다.
 

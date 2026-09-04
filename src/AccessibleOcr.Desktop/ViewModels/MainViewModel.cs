@@ -27,8 +27,11 @@ public sealed class MainViewModel : ObservableObject
 
         _currentView = Home;
         NavigateCommand = new RelayCommand(Navigate, CanNavigate);
-        StartAnalysisCommand = new RelayCommand(_ => StartAnalysis(), _ => Capabilities.CanImport && !Analysis.IsRunning);
+        StartAnalysisCommand = new RelayCommand(
+            _ => StartAnalysis(),
+            _ => Capabilities.CanImport && !Analysis.IsRunning && ImportSettings.IsPageRangeValid);
         Analysis.PropertyChanged += OnAnalysisPropertyChanged;
+        ImportSettings.PropertyChanged += OnImportSettingsPropertyChanged;
     }
 
     public AuthenticatedUser CurrentUser { get; }
@@ -135,6 +138,12 @@ public sealed class MainViewModel : ObservableObject
             return;
         }
 
+        if (!ImportSettings.IsPageRangeValid)
+        {
+            CurrentView = ImportSettings;
+            return;
+        }
+
         if (!Home.HasSelectedFile)
         {
             Home.FileStatus = "분석을 시작하려면 PDF 파일을 먼저 선택하세요.";
@@ -165,6 +174,17 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(ActiveJobProgress));
         OnPropertyChanged(nameof(ActiveJobMenuLabel));
         OnPropertyChanged(nameof(ActiveJobSummary));
+    }
+
+    private void OnImportSettingsPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
+    {
+        if (eventArgs.PropertyName is nameof(ImportSettingsViewModel.UseAllPages)
+            or nameof(ImportSettingsViewModel.StartPage)
+            or nameof(ImportSettingsViewModel.EndPage)
+            or nameof(ImportSettingsViewModel.IsPageRangeValid))
+        {
+            StartAnalysisCommand.RaiseCanExecuteChanged();
+        }
     }
 
     private async Task RunPipelineAsync(IProgress<ProcessingJob> progress, CancellationToken cancellationToken)

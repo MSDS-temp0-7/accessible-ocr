@@ -96,17 +96,26 @@ def _selected_page_indexes(page_count: int, value: object) -> list[int]:
         return list(range(page_count))
 
     selected: set[int] = set()
+    found_number = False
     for part in re.split(r"[,;]", text):
         numbers = [int(number) for number in re.findall(r"\d+", part)]
         if not numbers:
             continue
+        found_number = True
         if len(numbers) == 1:
             selected.add(numbers[0] - 1)
         else:
-            start, end = sorted(numbers[:2])
+            start, end = numbers[:2]
+            if start > end:
+                raise ValueError("시작 페이지는 끝 페이지보다 클 수 없습니다.")
             selected.update(range(start - 1, end))
-    valid = sorted(index for index in selected if 0 <= index < page_count)
-    return valid or list(range(page_count))
+    if not found_number or not selected:
+        raise ValueError("페이지 범위에 숫자를 입력하세요.")
+    if min(selected) < 0:
+        raise ValueError("페이지 번호는 1 이상이어야 합니다.")
+    if max(selected) >= page_count:
+        raise ValueError(f"페이지 범위가 문서 전체 {page_count}페이지를 벗어났습니다.")
+    return sorted(selected)
 
 
 def _option_enabled(options: dict, element_type: str) -> bool:

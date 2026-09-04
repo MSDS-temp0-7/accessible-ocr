@@ -79,6 +79,8 @@ public sealed class AppViewModel : ObservableObject
     {
         Session = session;
         Main = new MainViewModel(_documentService, _filePicker, session.User);
+        Main.NavigateCommand.CanExecuteChanged += OnMainNavigateCanExecuteChanged;
+        Main.StartAnalysisCommand.CanExecuteChanged += OnMainStartAnalysisCanExecuteChanged;
         CurrentView = Main;
         RaiseMainCommandState();
     }
@@ -108,6 +110,11 @@ public sealed class AppViewModel : ObservableObject
     private void Logout()
     {
         _authenticationService.Logout();
+        if (Main is not null)
+        {
+            Main.NavigateCommand.CanExecuteChanged -= OnMainNavigateCanExecuteChanged;
+            Main.StartAnalysisCommand.CanExecuteChanged -= OnMainStartAnalysisCanExecuteChanged;
+        }
         Session = null;
         Main = null;
         Login.Reset();
@@ -120,4 +127,10 @@ public sealed class AppViewModel : ObservableObject
         NavigateCommand.RaiseCanExecuteChanged();
         StartAnalysisCommand.RaiseCanExecuteChanged();
     }
+
+    private void OnMainNavigateCanExecuteChanged(object? sender, EventArgs eventArgs)
+        => NavigateCommand.RaiseCanExecuteChanged();
+
+    private void OnMainStartAnalysisCanExecuteChanged(object? sender, EventArgs eventArgs)
+        => StartAnalysisCommand.RaiseCanExecuteChanged();
 }

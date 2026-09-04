@@ -30,7 +30,36 @@
                     <TextBlock Text="OCR과 구조 인식에 사용할 옵션입니다." Foreground="#607385" Margin="0,5,0,18" />
 
                     <TextBlock Text="분석 범위" FontWeight="SemiBold" />
-                    <TextBox Margin="0,8,0,18" Text="{Binding PageRange}" automation:AutomationProperties.Name="분석할 페이지 범위" />
+                    <CheckBox Content="전체 페이지" IsChecked="{Binding UseAllPages}" Margin="0,10,0,10"
+                              automation:AutomationProperties.Name="PDF 전체 페이지 분석" />
+                    <Grid Margin="0,0,0,6" IsEnabled="{Binding IsCustomPageRangeEnabled}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="28" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="시작 페이지" FontSize="12" Foreground="#607385" />
+                            <TextBox Margin="0,5,0,0" Text="{Binding StartPage, UpdateSourceTrigger=PropertyChanged}"
+                                     PreviewTextInput="PageNumberTextBox_OnPreviewTextInput"
+                                     DataObject.Pasting="PageNumberTextBox_OnPasting"
+                                     automation:AutomationProperties.Name="분석 시작 페이지"
+                                     automation:AutomationProperties.HelpText="1 이상의 숫자만 입력하세요." />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Text="~" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,9" />
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="끝 페이지" FontSize="12" Foreground="#607385" />
+                            <TextBox Margin="0,5,0,0" Text="{Binding EndPage, UpdateSourceTrigger=PropertyChanged}"
+                                     PreviewTextInput="PageNumberTextBox_OnPreviewTextInput"
+                                     DataObject.Pasting="PageNumberTextBox_OnPasting"
+                                     automation:AutomationProperties.Name="분석 끝 페이지"
+                                     automation:AutomationProperties.HelpText="시작 페이지 이상의 숫자를 입력하세요." />
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Text="{Binding PageRangeValidationMessage}" TextWrapping="Wrap" FontSize="12"
+                               Foreground="#607385" Margin="0,0,0,18"
+                               automation:AutomationProperties.Name="페이지 범위 입력 상태"
+                               automation:AutomationProperties.LiveSetting="Polite" />
 
                     <TextBlock Text="인식 언어" FontWeight="SemiBold" />
                     <ComboBox Margin="0,8,0,18" Padding="8,5" SelectedValue="{Binding SelectedLanguage}" SelectedValuePath="Content"

@@ -53,6 +53,24 @@ def test_page_range_matches_wpf_input() -> None:
     assert _selected_page_indexes(6, "1-3, 5") == [0, 1, 2, 4]
 
 
+def test_page_range_outside_document_is_rejected() -> None:
+    try:
+        _selected_page_indexes(3, "2-5")
+    except ValueError as error:
+        assert "3페이지" in str(error)
+    else:
+        raise AssertionError("문서 범위를 벗어난 페이지가 거부되지 않았습니다.")
+
+
+def test_reversed_page_range_is_rejected() -> None:
+    try:
+        _selected_page_indexes(5, "4-2")
+    except ValueError as error:
+        assert "시작 페이지" in str(error)
+    else:
+        raise AssertionError("역순 페이지 범위가 거부되지 않았습니다.")
+
+
 def test_dotnet_encoded_korean_pdf_filename_is_decoded() -> None:
     encoded = "=?utf-8?B?7KCR6re87ZiVIE9DUiDsoITshqHqsoDsgqwucGRm?="
     assert _decode_upload_filename(encoded) == "접근형 OCR 전송검사.pdf"
