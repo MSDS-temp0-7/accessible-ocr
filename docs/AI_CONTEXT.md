@@ -24,7 +24,7 @@ Word 화면설계서와 기존 API 메모가 충돌하면, 화면·MVP 범위·�
 - AI 결과: 확정값이 아닌 제안. 원문, AI 제안, 사용자 수정, 검수 상태를 분리해 보인다.
 - 초기 상태에는 샘플 문서나 임의 객체 수를 만들지 않는다. 검수·내보내기 요약은 실제 `book.xml`/`review.json` 결과를 읽은 뒤에만 생성한다.
 - 검수 화면에 임의 수식·표 내용을 하드코딩하지 않는다. 특수 모델 미연결 상태는 실제 검출 영역에 명시적인 안내와 `needs_review`로 표현한다.
-- ViewModel의 private setter/read-only 속성을 `ProgressBar.Value` 등에 연결할 때 `Mode=OneWay`를 명시한다.
+- ViewModel·Model의 private setter/read-only 속성을 `ProgressBar.Value`, `Run.Text` 등에 연결할 때 `Mode=OneWay`를 명시한다. 특히 `Run.Text`의 기본 모드에 의존하지 않는다.
 - 처리되지 않은 UI 예외는 `App.xaml.cs`가 안내하고 `%LOCALAPPDATA%\AccessibleOcr\logs\app-errors.log`에 기록한다.
 - `AnalysisViewModel`은 앱 셸이 공유하는 단일 작업 상태다. 화면 이동만으로
   `Reset()`하거나 새 ViewModel을 만들지 않는다. 실행 중에는 파일 재선택과 중복

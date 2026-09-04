@@ -17,10 +17,10 @@
                          AcceptsReturn="True" MinHeight="180" Background="#F7F9FB"
                          automation:AutomationProperties.Name="선택한 표 또는 도표 OCR 내용" />
                 <TextBlock Margin="0,18,0,0" Foreground="#52697A">
-                    <Run Text="유형 " /><Run Text="{Binding SelectedBlock.Type}" />
-                    <Run Text=" · 페이지 " /><Run Text="{Binding SelectedBlock.PageNumber}" />
-                    <Run Text=" · 신뢰도 " /><Run Text="{Binding SelectedBlock.Confidence, StringFormat={}{0:P0}}" />
-                    <Run Text=" · 상태 " /><Run Text="{Binding SelectedBlock.ReviewStatus}" />
+                    <Run Text="유형 " /><Run Text="{Binding SelectedBlock.Type, Mode=OneWay}" />
+                    <Run Text=" · 페이지 " /><Run Text="{Binding SelectedBlock.PageNumber, Mode=OneWay}" />
+                    <Run Text=" · 신뢰도 " /><Run Text="{Binding SelectedBlock.Confidence, Mode=OneWay, StringFormat={}{0:P0}}" />
+                    <Run Text=" · 상태 " /><Run Text="{Binding SelectedBlock.ReviewStatus, Mode=OneWay}" />
                 </TextBlock>
                 <Border Background="#FFF8E8" BorderBrush="#E6A12C" BorderThickness="1" Padding="16" Margin="0,24,0,0">
                     <TextBlock Text="영역은 실제로 검출됐지만 표 셀·행·열 구조 또는 그래프 설명 전용 모델은 아직 연결되지 않았습니다. 가짜 셀 데이터는 표시하지 않습니다."

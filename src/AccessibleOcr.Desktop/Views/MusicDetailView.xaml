@@ -17,9 +17,9 @@
                          AcceptsReturn="True" MinHeight="180" Background="#F7F9FB"
                          automation:AutomationProperties.Name="선택한 악보 OCR 내용" />
                 <TextBlock Margin="0,18,0,0" Foreground="#52697A">
-                    <Run Text="페이지 " /><Run Text="{Binding SelectedBlock.PageNumber}" />
-                    <Run Text=" · 신뢰도 " /><Run Text="{Binding SelectedBlock.Confidence, StringFormat={}{0:P0}}" />
-                    <Run Text=" · 상태 " /><Run Text="{Binding SelectedBlock.ReviewStatus}" />
+                    <Run Text="페이지 " /><Run Text="{Binding SelectedBlock.PageNumber, Mode=OneWay}" />
+                    <Run Text=" · 신뢰도 " /><Run Text="{Binding SelectedBlock.Confidence, Mode=OneWay, StringFormat={}{0:P0}}" />
+                    <Run Text=" · 상태 " /><Run Text="{Binding SelectedBlock.ReviewStatus, Mode=OneWay}" />
                 </TextBlock>
                 <Border Background="#FFF8E8" BorderBrush="#E6A12C" BorderThickness="1" Padding="16" Margin="0,24,0,0">
                     <TextBlock Text="악보 구조·MusicXML·점자악보 변환 모델은 아직 연결되지 않았습니다. 마디와 음표를 임의로 생성하지 않고 검수 대상 상태만 표시합니다."

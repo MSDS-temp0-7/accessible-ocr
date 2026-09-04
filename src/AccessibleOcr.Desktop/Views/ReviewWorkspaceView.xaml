@@ -54,9 +54,9 @@
                                 <StackPanel Margin="0,4" MinWidth="150">
                                     <TextBlock Text="{Binding Id}" FontWeight="SemiBold" />
                                     <TextBlock Foreground="#607385" FontSize="12">
-                                        <Run Text="{Binding TypeDisplayName}" />
+                                        <Run Text="{Binding TypeDisplayName, Mode=OneWay}" />
                                         <Run Text=" · " />
-                                        <Run Text="{Binding Confidence, StringFormat={}{0:P0}}" />
+                                        <Run Text="{Binding Confidence, Mode=OneWay, StringFormat={}{0:P0}}" />
                                     </TextBlock>
                                     <TextBlock Text="{Binding Content}" Foreground="#607385" FontSize="11"
                                                TextTrimming="CharacterEllipsis" MaxWidth="165" />
@@ -201,13 +201,13 @@
                         <TextBlock Text="{Binding SelectedBlock.ReviewStatus}" Margin="0,8,0,20" Foreground="#34536B" />
                         <TextBlock Foreground="#607385" TextWrapping="Wrap" Margin="0,0,0,16">
                             <Run Text="좌표 X " />
-                            <Run Text="{Binding SelectedBlock.X, StringFormat={}{0:F0}}" />
+                            <Run Text="{Binding SelectedBlock.X, Mode=OneWay, StringFormat={}{0:F0}}" />
                             <Run Text=", Y " />
-                            <Run Text="{Binding SelectedBlock.Y, StringFormat={}{0:F0}}" />
+                            <Run Text="{Binding SelectedBlock.Y, Mode=OneWay, StringFormat={}{0:F0}}" />
                             <Run Text=", 너비 " />
-                            <Run Text="{Binding SelectedBlock.Width, StringFormat={}{0:F0}}" />
+                            <Run Text="{Binding SelectedBlock.Width, Mode=OneWay, StringFormat={}{0:F0}}" />
                             <Run Text=", 높이 " />
-                            <Run Text="{Binding SelectedBlock.Height, StringFormat={}{0:F0}}" />
+                            <Run Text="{Binding SelectedBlock.Height, Mode=OneWay, StringFormat={}{0:F0}}" />
                         </TextBlock>
                         <Button Content="상세 열기" Style="{StaticResource SecondaryButton}" Command="{Binding OpenDetailCommand}"
                                 automation:AutomationProperties.Name="선택한 특수 객체 상세 열기" />
