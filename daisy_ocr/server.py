@@ -38,6 +38,7 @@ if not os.environ.get("CLOVA_GATEWAY") and os.environ.get("CLOVA_OCR_SECRET"):
 
 from daisy_ocr.layout.detect import DEFAULT_MODEL, LayoutRegion, to_our_type
 from daisy_ocr.layout.render import render_pdf_page
+from daisy_ocr.music.adapter import music_runtime_status, recognize_music_region
 from daisy_ocr.output.package import PagePackage, build_result_package
 from daisy_ocr.pipeline import PreparedPage, TranscribedRegion, merge_page, prepare_page
 
@@ -130,6 +131,53 @@ def _option_enabled(options: dict, element_type: str) -> bool:
     return bool(options.get(name, True)) if name else True
 
 
+def _region_type(region: LayoutRegion, layout_model: str) -> str:
+    """모델팀 어댑터가 승격한 악보 라벨과 원본 레이아웃 라벨을 통합한다."""
+    return "music" if region.label == "music" else to_our_type(region.label, layout_model)
+
+
+def _music_regions(prepared: PreparedPage, options: dict) -> list[LayoutRegion]:
+    """악보 문맥이 있는 페이지의 가장 큰 그림 영역을 악보로 승격한다.
+
+    현재 DocLayNet 체크포인트에는 music 클래스가 없다. 따라서 제목·캡션 OCR에
+    악보 문맥이 있고 사용자가 악보 검출을 켠 경우에만 가장 큰 Picture/Figure
+    영역 하나를 실제 악보 모델 입력으로 사용한다.
+    """
+    regions = list(prepared.non_text_regions)
+    if not options.get("DetectMusic", True):
+        return regions
+
+    page_text = " ".join(block.text for block in prepared.ocr_blocks).lower()
+    hints = tuple(
+        value.strip().lower()
+        for value in os.environ.get(
+            "MUSIC_PAGE_HINTS",
+            "악보,sheet music,music score,오선보,음이름,계이름",
+        ).split(",")
+        if value.strip()
+    )
+    if not any(hint in page_text for hint in hints):
+        return regions
+
+    candidates = [
+        region for region in regions
+        if to_our_type(region.label, prepared.layout_model) == "graph"
+    ]
+    if not candidates:
+        return regions
+
+    score_region = max(
+        candidates,
+        key=lambda region: max(0.0, region.bbox[2] - region.bbox[0])
+        * max(0.0, region.bbox[3] - region.bbox[1]),
+    )
+    return [
+        LayoutRegion("music", list(region.bbox), region.confidence)
+        if region is score_region else region
+        for region in regions
+    ]
+
+
 def _ocr_text_inside(prepared: PreparedPage, region: LayoutRegion) -> str:
     rx1, ry1, rx2, ry2 = region.bbox
     fragments: list[str] = []
@@ -148,7 +196,13 @@ def _encode_page_preview(image) -> bytes:
     return output.getvalue()
 
 
-def _placeholder_transcriptions(prepared: PreparedPage, options: dict) -> tuple[list[LayoutRegion], list[TranscribedRegion]]:
+async def _transcribe_special_regions(
+    image,
+    prepared: PreparedPage,
+    options: dict,
+    output_root: Path,
+    page_index: int,
+) -> tuple[list[LayoutRegion], list[TranscribedRegion]]:
     notices = {
         "table": "표 영역이 감지되었습니다. 전용 표 구조 분석 전 검수가 필요합니다.",
         "formula": "수식 영역이 감지되었습니다. 전용 수식 변환 전 검수가 필요합니다.",
@@ -158,11 +212,54 @@ def _placeholder_transcriptions(prepared: PreparedPage, options: dict) -> tuple[
     }
     regions: list[LayoutRegion] = []
     transcribed: list[TranscribedRegion] = []
-    for region in prepared.non_text_regions:
-        element_type = to_our_type(region.label, prepared.layout_model)
+    source_regions = _music_regions(prepared, options)
+    for region_index, region in enumerate(source_regions):
+        element_type = _region_type(region, prepared.layout_model)
         if not _option_enabled(options, element_type):
             continue
         regions.append(region)
+        if element_type == "music":
+            x1, y1, x2, y2 = region.bbox
+            crop_box = (
+                max(0, int(x1)), max(0, int(y1)),
+                min(image.width, max(int(x1) + 1, int(x2))),
+                min(image.height, max(int(y1) + 1, int(y2))),
+            )
+            crop = image.crop(crop_box)
+            try:
+                result = await asyncio.to_thread(
+                    recognize_music_region,
+                    crop,
+                    output_root,
+                    page_index=page_index,
+                    region_index=region_index,
+                )
+                transcribed.append(TranscribedRegion(
+                    type="music",
+                    label=region.label,
+                    bbox=tuple(region.bbox),
+                    confidence=result.confidence,
+                    text=result.text,
+                    error="music_review_required" if result.needs_review else None,
+                ))
+            except Exception as exc:
+                message = str(exc).strip() or type(exc).__name__
+                transcribed.append(TranscribedRegion(
+                    type="music",
+                    label=region.label,
+                    bbox=tuple(region.bbox),
+                    confidence=region.confidence,
+                    text=(
+                        "악보 영역을 찾았지만 악보 인식기를 실행하지 못했습니다. "
+                        "Audiveris와 AUDIVERIS_CMD 설정을 확인한 뒤 다시 분석하세요.\n"
+                        f"오류: {message}"
+                    ),
+                    error=f"music_recognition_failed: {message}",
+                ))
+            finally:
+                crop.close()
+            continue
+
         recognized_text = _ocr_text_inside(prepared, region)
         notice = notices.get(element_type, notices["unknown"])
         text = f"{notice}\n{recognized_text}" if recognized_text else notice
@@ -199,7 +296,13 @@ async def _process_job(job: Job) -> None:
             image = await asyncio.to_thread(render_pdf_page, job.source_path, page_index, dpi)
             try:
                 prepared = await prepare_page(image, layout_model=model)
-                selected_regions, transcribed = _placeholder_transcriptions(prepared, job.options)
+                selected_regions, transcribed = await _transcribe_special_regions(
+                    image,
+                    prepared,
+                    job.options,
+                    job.source_path.parent / "music",
+                    page_index,
+                )
                 ocr_blocks = prepared.ocr_blocks if job.options.get("DetectBody", True) else []
                 elements = merge_page(ocr_blocks, selected_regions, transcribed)
                 preview_bytes = await asyncio.to_thread(_encode_page_preview, image)
@@ -217,7 +320,11 @@ async def _process_job(job: Job) -> None:
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "service": "accessible-ocr-local-api"}
+    return {
+        "status": "ok",
+        "service": "accessible-ocr-local-api",
+        "music": music_runtime_status(),
+    }
 
 
 @app.post("/api/v1/jobs", status_code=202)

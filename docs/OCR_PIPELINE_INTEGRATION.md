@@ -45,7 +45,7 @@ PATCH /api/v1/documents/{document_id}/elements/{element_id}/review
 CLOVA 호출은 페이지당 한 번이다. 자동 재시도나 숨은 사전 호출은 없다.
 레이아웃 모델 가중치는 Hugging Face 캐시에 한 번 다운로드된 뒤 재사용된다.
 
-## 결과 패키지
+## 현재 중간 결과 패키지
 
 | 파일 | 현재 책임 | WPF 사용처 |
 | --- | --- | --- |
@@ -60,6 +60,16 @@ CLOVA 호출은 페이지당 한 번이다. 자동 재시도나 숨은 사전 �
 - `review_status`는 `pending`, `reviewed`, `needs_review` 중 하나다.
 - 일반 OCR이 0.8 미만이면 `needs_review`다.
 - 전용 변환이 아직 없는 특수 영역은 신뢰도와 무관하게 `needs_review`다.
+
+이 ZIP은 검수 작업공간으로 전달하는 중간 패키지다. 완성 DAISY 파일로 배포하지 않는다.
+
+## 필수 DAISY 내보내기 계약
+
+검수 완료 후 서버는 수정 내용을 `book.xml`에 반영하고 DAISY3(Z39.86) 표준 패키지를 생성해야 한다. 최소한 DTBook 본문, 패키지 메타데이터, 내비게이션 문서와 필요한 리소스를 포함하고, 선택한 목표 규격의 검증 결과를 함께 반환해야 한다. 음성 파일은 선택 항목이지만 텍스트 DAISY 패키지 생성과 검증은 필수다.
+
+DAISY 산출물과 별도로 사용자용 검수 보고서를 생성한다. 보고서에는 문서 식별 정보, 검수 완료·미확인 수, 오류 목록, 사용자 수정 내역, 사용 모델·파이프라인 버전과 생성 시각을 포함한다. 내부 `review.json`만 전달하는 것은 사용자용 검수 보고서로 인정하지 않는다.
+
+내보내기 API의 구체 경로와 응답 형식은 구현 시 확정하되, WPF가 내보내기 진행률·검증 실패·다운로드 가능 상태를 스크린리더 라이브 알림으로 전달할 수 있는 비동기 Job 형태를 유지한다.
 
 ## WPF 요청 옵션
 
@@ -111,6 +121,18 @@ TranscribedRegion:
 `"image_ref": "pages/page-0001.jpg"`가 추가된다. 좌표는 이 이미지의
 `width`, `height` 픽셀 좌표계와 같으므로 화면에서는 동일 비율로 축소한 뒤
 박스를 겹쳐 그린다. `image_ref`는 하위 호환을 위해 선택값이다.
+
+### 악보 구현
+
+- `daisy_ocr.music.adapter`가 `daisy-music/services/music_recognizer.py`를
+  같은 Python 보조 프로세스에서 호출한다. 별도 Music API 포트는 사용하지 않는다.
+- 입력은 검출 영역을 자른 PNG이고 결과의 `summary.text`, `spokenText`,
+  `confidence.average`, `review`를 Music `TranscribedRegion`으로 변환한다.
+- `music21`, `requests`는 루트 Python 의존성으로 설치한다. OMR 실행에는
+  별도 Java·Audiveris 설치 및 `AUDIVERIS_CMD`가 필요하다.
+- 모델 실행 실패는 전체 Job을 중단하지 않고 해당 영역의 `error`와 사용자용
+  설명에 기록한다. 따라서 결과 패키지는 생성되며 해당 블록은 `needs_review`다.
+- 상세 설치와 현 제한은 `docs/MUSIC_MODEL_INTEGRATION.md`를 따른다.
 
 `daisy_ocr.pipeline.merge_page()`는 전사 엔진에 의존하지 않으므로 모델팀
 결과를 이 구조로 바꾸는 어댑터만 추가하면 된다. 현재 서버의 안내 문구 생성은

@@ -22,7 +22,7 @@
                     <Run Text=" · 상태 " /><Run Text="{Binding SelectedBlock.ReviewStatus, Mode=OneWay}" />
                 </TextBlock>
                 <Border Background="#FFF8E8" BorderBrush="#E6A12C" BorderThickness="1" Padding="16" Margin="0,24,0,0">
-                    <TextBlock Text="악보 구조·MusicXML·점자악보 변환 모델은 아직 연결되지 않았습니다. 마디와 음표를 임의로 생성하지 않고 검수 대상 상태만 표시합니다."
+                    <TextBlock Text="이 내용은 Audiveris 기반 악보 인식과 MusicXML 분석 결과입니다. 신뢰도가 낮거나 빈 마디가 있는 결과는 반드시 원본 악보와 대조해 검수하세요. 점자악보 변환과 DAISY 최종 패키징은 별도 단계입니다."
                                TextWrapping="Wrap" Foreground="#7A5521" />
                 </Border>
             </StackPanel>

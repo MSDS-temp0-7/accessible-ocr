@@ -1,0 +1,16 @@
+# OCR-DAISY 악보 API 직접 Python 의존성
+#
+# 권장 Python: 3.11
+# 현재 Mac 개발에서는 Python 3.9도 동작했지만 LibreSSL/urllib3 경고가 발생했으므로
+# 서버 배포는 Python 3.11 이상을 권장합니다.
+#
+# 1차 서버 연동이 정상적으로 끝난 뒤에는 재현성을 위해 버전을 고정하는 것을 권장합니다.
+# 예:
+#   pip freeze > requirements-lock.txt
+
+fastapi
+uvicorn[standard]
+python-multipart
+Pillow
+music21
+requests

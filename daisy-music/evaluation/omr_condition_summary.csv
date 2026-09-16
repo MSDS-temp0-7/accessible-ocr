@@ -1,0 +1,5 @@
+﻿condition,total_samples,mxl_success_count,mxl_failed_count,mxl_success_rate,pitch_accuracy_avg,duration_accuracy_avg,accidental_accuracy_avg,rest_accuracy_avg,key_signature_accuracy_avg,time_signature_accuracy_avg
+original,5,5,0,100.0,99.2,98.4,100.0,68.57,100.0,100.0
+small,5,5,0,100.0,97.5,97.5,87.5,68.57,100.0,100.0
+tilt,5,3,2,60.0,45.83,45.83,50.0,4.6,100.0,100.0
+lowq,5,5,0,100.0,100.0,100.0,100.0,68.57,100.0,100.0

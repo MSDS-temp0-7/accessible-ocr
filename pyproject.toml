@@ -24,6 +24,8 @@ dependencies = [
     "python-dotenv>=1.2.3,<2.0.0",
     "rapidocr>=3.9.2,<4.0.0",
     "httpx>=0.28.1,<0.29.0",
+    "music21>=8.3,<10.0",
+    "requests>=2.32,<3.0",
 ]
 
 [project.scripts]

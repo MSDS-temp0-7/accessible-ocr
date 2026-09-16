@@ -14,6 +14,7 @@ DocLayout-YOLO를 연결하여 PDF 시연을 실행하는 절차다. DB나 로�
 - .NET 8 SDK
 - Python 패키지 실행 도구 `uv`
 - CLOVA OCR Invoke URL과 Secret
+- 악보 시연 시 Java 런타임과 Audiveris
 
 `config/integration-api.env.example`을 같은 폴더의
 `integration-api.env`로 복사하고 아래 두 값의 오른쪽만 실제 발급값으로
@@ -22,6 +23,14 @@ DocLayout-YOLO를 연결하여 PDF 시연을 실행하는 절차다. DB나 로�
 ```text
 CLOVA_OCR_INVOKE_URL=실제_Invoke_URL
 CLOVA_OCR_SECRET=실제_Secret
+```
+
+악보 인식까지 시연하려면 같은 파일에 설치된 Audiveris 실행 경로를 추가한다.
+
+```text
+MUSIC_RECOGNITION_ENABLED=true
+MUSIC_MODEL_ROOT=daisy-music
+AUDIVERIS_CMD=C:\Program Files\Audiveris\bin\Audiveris.bat
 ```
 
 `integration-api.env`는 Git에서 제외된다. 키를 코드, 문서, 커밋, 이슈,
@@ -65,6 +74,8 @@ CLOVA_OCR_SECRET=실제_Secret
 - PDF 페이지 이미지 렌더링
 - CLOVA OCR 일반 글자·좌표·신뢰도 추출
 - DocLayout-YOLO 표·수식·그림 영역 검출
+- 악보 문맥 페이지의 악보 영역을 `daisy-music`에 전달하고 MusicXML 기반
+  요약·마디별 읽기·신뢰도·검수 사유 표시
 - OCR 조각과 비텍스트 영역의 중복 제거 및 읽기 순서 병합
 - `book.xml`과 `review.json` ZIP 생성
 - WPF 분석 진행률, 객체 수, 검수 목록, 실제 인식 텍스트 표시
@@ -74,8 +85,10 @@ CLOVA_OCR_SECRET=실제_Secret
 
 ## 5. 아직 시연용 제한인 것
 
-- 표 셀 구조, 수식 MathML, 그래프 설명, 악보 변환 전용 모델은 아직 연결되지 않았다.
-- 특수 영역은 실제 위치를 검출하지만, 내용에는 `전용 모델 연결 전 검수 필요` 안내와 해당 영역에서 CLOVA가 읽은 글자만 들어간다.
+- 표 셀 구조, 수식 MathML, 그래프 설명 전용 모델은 아직 연결되지 않았다.
+- 악보 모델은 연결되었지만 기본 레이아웃 모델에 music 클래스가 없어 악보
+  문맥 페이지의 가장 큰 그림 영역을 임시로 사용한다. Java·Audiveris가 없으면
+  해당 Music 블록에 설정 오류를 표시하고 나머지 PDF 결과는 계속 생성한다.
 - 오버레이 확대·축소, 페이지 맞춤, 유형별 표시 필터는 아직 없다.
 - 검수 수정은 서버 메모리에만 남고 API 종료 시 사라진다.
 - 화면 이동 중 작업은 유지되지만 앱이나 로컬 API를 종료한 뒤에는 복구되지 않는다.
@@ -86,5 +99,7 @@ CLOVA_OCR_SECRET=실제_Secret
 
 - 앱에 `연결할 수 없음`이 표시되면 로컬 API PowerShell 창이 실행 중인지 확인한다.
 - CLOVA 관련 오류면 `integration-api.env`의 URL과 Secret을 다시 확인한다.
+- `/health`의 `music.available`이 `false`이면 Java·Audiveris 설치와
+  `AUDIVERIS_CMD` 실제 경로를 확인한다.
 - 시연 중에는 Secret이 보일 수 있는 설정 파일이나 터미널 명령을 화면에 띄우지 않는다.
 - Python 환경을 다시 만들 때도 시작 스크립트를 사용한다. 한글 프로젝트 경로 호환을 위해 일반 wheel 설치 방식이 적용돼 있다.

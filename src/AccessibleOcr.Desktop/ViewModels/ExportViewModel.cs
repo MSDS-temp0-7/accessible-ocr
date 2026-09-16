@@ -6,7 +6,7 @@ namespace AccessibleOcr.Desktop.ViewModels;
 
 /// <summary>
 /// 검수 결과가 실제로 로드된 경우에만 내보내기 요약을 표시한다.
-/// 내보내기 파일 생성 API는 모델 측 계약이 확정되면 연결한다.
+/// DAISY3 패키지와 사용자용 검수 보고서는 필수 산출물이며, 내보내기 API 구현 후 연결한다.
 /// </summary>
 public sealed class ExportViewModel : ObservableObject
 {
@@ -120,8 +120,8 @@ public sealed class ExportViewModel : ObservableObject
         MusicSummary = $"악보 {music}";
         MusicStatus = music == 0 ? "해당 없음" : "검수 대상";
         ExportStatus = needsReview == 0
-            ? "실제 OCR 결과를 기준으로 검수 완료되었습니다."
-            : $"검수가 필요한 항목 {needsReview}건이 있습니다. 내보내기 시 검수 보고서에 기록됩니다.";
+            ? "검수가 완료되었습니다. DAISY3 패키지와 검수 보고서 생성 준비 상태입니다."
+            : $"검수가 필요한 항목 {needsReview}건이 있습니다. DAISY3 패키지와 검수 보고서에 해당 상태가 기록됩니다.";
         HasDocument = true;
     }
 
@@ -146,6 +146,6 @@ public sealed class ExportViewModel : ObservableObject
             return;
         }
 
-        ExportStatus = "내보내기 API 계약이 확정되면 실제 DAISY/Word 파일 생성 기능을 연결합니다.";
+        ExportStatus = "필수 DAISY3 패키지와 검수 보고서 내보내기 API가 아직 구현되지 않았습니다.";
     }
 }

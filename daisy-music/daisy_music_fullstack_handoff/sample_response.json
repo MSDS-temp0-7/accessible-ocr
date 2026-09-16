@@ -1,0 +1,53 @@
+{
+  "success": true,
+  "requestId": "sample-request-id",
+  "upload": {
+    "filename": "M01.png",
+    "sizeBytes": 123456
+  },
+  "musicContent": {
+    "type": "music",
+    "status": "DONE",
+    "musicXml": "<MusicXML 문자열은 실제 응답에서 포함>",
+    "metadata": {},
+    "spokenText": "상세 사실 기반 악보 설명이 들어갑니다.",
+    "summary": {
+      "text": "가장 낮은 음은 가온 도(C4)이고, 가장 높은 음은 가온 도보다 한 옥타브 높은 도(C5)입니다. 음은 전체적으로 낮은 쪽에서 높은 쪽으로 진행합니다. 박자는 4분의 4박자입니다.",
+      "validation": {
+        "passed": true,
+        "retried": false,
+        "fallbackUsed": false
+      },
+      "claims": []
+    },
+    "measures": [],
+    "features": {},
+    "confidence": {
+      "average": 0.806,
+      "minimum": 0.78,
+      "measureCount": 30
+    },
+    "review": {
+      "needsReview": false,
+      "level": "LOW",
+      "reasons": [],
+      "threshold": 0.67
+    },
+    "mapping": {
+      "omrHeadCount": 8,
+      "jsonNoteCount": 8,
+      "noteCountMatch": true,
+      "omrRestCount": 28,
+      "jsonRestCount": 28,
+      "restCountMatch": true
+    },
+    "brailleMusic": null,
+    "outputs": {
+      "daisy": null,
+      "hwp": null
+    },
+    "playback": null,
+    "artifacts": {},
+    "recognition": {}
+  }
+}

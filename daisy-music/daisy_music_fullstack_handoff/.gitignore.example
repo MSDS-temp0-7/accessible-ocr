@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# 환경 변수
+.env
+
+# API/runtime 생성 파일
+api_uploads/
+music_api_runs/
+music_recognition_runs/
+parsed_output/
+confidence_output/
+feature_output/
+spoken_output/
+pipeline_output/
+
+# Audiveris 자동 테스트/로그
+audiveris_auto_test/
+audiveris_runs/
+*.log
+
+# macOS
+.DS_Store

@@ -1,0 +1,2 @@
+name,measure_gt,measure_pred,pitch_precision,pitch_recall,pitch_f1,rest_precision,rest_recall,rest_f1,duration_accuracy,accidental_accuracy,time_signature_accuracy,key_signature_accuracy,chord_f1,tie_f1,slur_f1,dynamic_f1,repeat_f1,tempo_match,empty_measures
+OCR_Test01_screen_normal,12,12,1.0,0.975,0.9873,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,1.0,True,"[{""part"": 0, ""measure"": ""11""}]"

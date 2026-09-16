@@ -2,7 +2,7 @@
 
 ## 설계 권한과 목표
 
-- 최우선 설계 자료: `Windows_네이티브_접근형_OCR_화면설계서_v0.1.docx`
+- 최우선 설계 자료: `Windows_네이티브_접근형_OCR_화면설계서_v0.2.docx`, `docs/REQUIREMENTS_DECISION_DAISY.md`
 - 보조 초기 시안: `접근형 OCR 앱_WF-01~04.png`
 - 제품: OCR 결과를 접근 가능한 구조로 만들고 검수·내보내기하는 Windows 네이티브 앱
 - 플랫폼/UI: Windows 10/11, WPF, .NET 8, XAML, MVVM
@@ -10,17 +10,19 @@
 - 인증 단계: 로그인 화면과 HTTP 인증 클라이언트, 회원가입 입력 화면, 메모리 세션, 역할별 UI 권한 골격 구현. 회원가입은 저장하지 않으며 실제 인증 서버와 사용자 DB는 미구현.
 - OCR I/O 기준: 루트의 `IO-SPEC_OCR-Layout-Formula_v0.2.md`
 
-Word 화면설계서와 기존 API 메모가 충돌하면, 화면·MVP 범위·접근성은 Word 설계서를 우선하고 API 메모는 구현 전 정리 대상으로 취급한다.
+문서가 충돌하면 `docs/REQUIREMENTS_DECISION_DAISY.md`와 Word 화면설계서 v0.2를 우선한다. DAISY 출력과 스크린리더 접근성을 후속 또는 선택 기능으로 낮추지 않는다.
 
 ## 제품 경계
 
 - MVP 입력: PDF, 이미지, DOCX, HWP
-- MVP 출력: 구조화 DOCX, 접근 가능한 HTML, 검수 보고서
-- 후속/연동 출력: DAISY, HWP 직접 생성, 음성 파일, 점자악보
+- 필수 출력: 완성 DAISY3(Z39.86) 패키지, 사용자용 검수 보고서
+- 보조 출력: 구조화 DOCX, 접근 가능한 HTML
+- 후속/선택 출력: HWP 직접 생성, 앱 내부 TTS·음성 파일, 점자악보
+- 필수 접근성: Windows 내레이터·NVDA 등 외부 스크린리더와 키보드만으로 가져오기·분석·검수·내보내기 완료
 - WPF 프로세스는 모델을 직접 실행하지 않는다. 현재 `localhost:8000`의 Python 보조 프로세스가 모델을 실행하며, 운영 배치 방식은 미정이다.
-- 일반 텍스트는 CLOVA OCR이 실제 처리한다. DocLayout-YOLO는 특수 객체 위치를 실제 검출하며 표·수식·그래프·악보의 전용 내용 변환은 모델팀 결과 연결 대기다.
+- 일반 텍스트는 CLOVA OCR이 실제 처리한다. DocLayout-YOLO는 특수 객체 위치를 실제 검출한다. 악보는 `daisy_ocr.music.adapter`가 `daisy-music`의 Audiveris/MusicXML 파이프라인을 실제 호출하며, 표·수식·그래프 전용 내용 변환은 모델팀 결과 연결 대기다.
 - CLOVA/모델 API의 실제 키는 EXE나 Git 추적 파일에 넣지 않는다. 서버 로컬 설정 위치는 `config/integration-api.env`이며 공유용 표본은 `.example` 파일이다.
-- 결과 계약: DAISY3 DTBook `book.xml` + 검수 사이드카 `review.json` + `pages/page-XXXX.jpg` 검수용 페이지 이미지.
+- 현재 중간 결과 계약: DAISY3 DTBook `book.xml` + 검수 사이드카 `review.json` + `pages/page-XXXX.jpg` 검수용 페이지 이미지. 이 ZIP은 완성 DAISY 산출물이 아니며, 최종 단계에서 검수 내용을 반영한 DAISY 패키지와 사용자용 검수 보고서로 변환·검증해야 한다.
 - AI 결과: 확정값이 아닌 제안. 원문, AI 제안, 사용자 수정, 검수 상태를 분리해 보인다.
 - 초기 상태에는 샘플 문서나 임의 객체 수를 만들지 않는다. 검수·내보내기 요약은 실제 `book.xml`/`review.json` 결과를 읽은 뒤에만 생성한다.
 - 검수 화면에 임의 수식·표 내용을 하드코딩하지 않는다. 특수 모델 미연결 상태는 실제 검출 영역에 명시적인 안내와 `needs_review`로 표현한다.
@@ -31,6 +33,18 @@ Word 화면설계서와 기존 API 메모가 충돌하면, 화면·MVP 범위·�
   시작을 막고, 셸의 `진행 중 작업` 버튼으로 언제든 같은 분석 화면에 복귀시킨다.
 - 현재 작업 유지 범위는 동일 앱 실행 안이다. 프로세스 재시작 후 복구를
   메모리 상태로 흉내 내지 말고 SQLite/서버 저장 설계와 함께 구현한다.
+- 기본 DocLayNet에는 music 클래스가 없다. 현재는 페이지 OCR에 악보 문맥이
+  있을 때 가장 큰 Picture 영역 하나를 music으로 승격한다. 전용 악보 영역
+  검출기가 들어오면 `_music_regions()`의 이 규칙을 교체한다.
+- 악보 모델의 외부 런타임은 Java와 Audiveris이며 `AUDIVERIS_CMD`로 경로를
+  지정한다. 실행 불가나 영역별 인식 실패는 PDF Job 전체 실패가 아니라 해당
+  Music 블록의 `needs_review`와 오류 설명으로 남긴다.
+- `악보 영역을 찾았지만 악보 인식기를 실행하지 못했습니다`는 1단계 영역
+  검출 성공 후 2단계 Audiveris OMR을 시작하지 못했다는 뜻이다. 이를 레이아웃
+  인식 실패로 해석하거나 샘플 결과로 대체하지 않는다. 현재 개발 PC에는 Java와
+  Audiveris가 없으며, 설치 후 `AUDIVERIS_CMD` 설정과 API 재시작이 필요하다.
+- 악보 연결의 현재 진행표, 오류 기록, 복구 명령은
+  `docs/MUSIC_MODEL_INTEGRATION.md`를 단일 기준 문서로 사용한다.
 
 ## 현재 로컬 API 코드
 
@@ -113,7 +127,8 @@ Text | Table | Graph | Math | Music | Image
 - 라이브 알림은 진행률, 발견 객체, 오류에 사용하되 반복 이벤트는 합친다.
 - 상태는 색상뿐 아니라 텍스트와 UI Automation 상태로 전달한다.
 - 오버레이에만 정보를 두지 말고, 접근 가능한 목록·트리·편집기를 함께 제공한다.
-- 완료 전 200% 텍스트 확대, 고대비, 포커스 사각형, Narrator 흐름을 확인한다.
+- 완료 전 200% 텍스트 확대, 고대비, 포커스 사각형, Narrator·NVDA 흐름을 확인한다.
+- 앱 내부 TTS는 외부 스크린리더 호환성을 대체하지 않는다. 스크린리더로 전체 핵심 흐름을 완료하는 것을 우선 검증한다.
 
 ## 변경 작업 규칙
 
