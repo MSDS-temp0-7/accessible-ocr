@@ -17,6 +17,8 @@
 
 ## 문서 안내
 
+- [팀 도표·악보 모델 적용](docs/TEAM_MODEL_INTEGRATION.md): 2026-09-18 적용 결과, 실행 방법, Ollama 선택 여부, 실추론 검증과 남은 제한
+
 - [개발 방향](docs/DEVELOPMENT_DIRECTION.md): 제품 범위, 화면별 진행 상태, 구현 우선순위
 - [DAISY 필수 연동 결정](docs/REQUIREMENTS_DECISION_DAISY.md): 최종 산출물, 검수 보고서, 스크린리더 필수 기준
 - [AI 컨텍스트](docs/AI_CONTEXT.md): AI에게 프로젝트 맥락을 전달할 때 사용하는 요약

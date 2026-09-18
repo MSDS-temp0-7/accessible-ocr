@@ -1545,6 +1545,18 @@ def select_optional_fact_ids(
         )
     )
 
+    # Explicit rules mode avoids a failing Ollama request on PCs without it.
+    if os.environ.get("MUSIC_SUMMARY_MODE", "auto").lower() == "rules":
+        return {
+            "selectedIds": deterministic_optional_selection(optional_catalog, selection_count),
+            "selectedBy": "deterministic_rules",
+            "retried": False,
+            "fallbackUsed": False,
+            "issues": [],
+            "firstOutput": None,
+            "retryOutput": None,
+        }
+
     user_prompt = (
         build_user_prompt(
             optional_catalog,

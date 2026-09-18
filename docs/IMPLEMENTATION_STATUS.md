@@ -1,5 +1,7 @@
 # 구현 진행 현황
 
+> 2026-09-18 추가: 팀 Qwen 도표 설명 연결 및 PDF API 실추론, Audiveris 신규 악보 인식을 확인했다. Python 테스트 17개와 WPF Debug 빌드를 통과했다. 음악 요약은 Ollama 없이 `MUSIC_SUMMARY_MODE=rules`로 실행한다. [최신 팀 모델 적용 기록](TEAM_MODEL_INTEGRATION.md)이 아래 2026-09-16 기록 중 도표 연결 대기·악보 실행 환경 미설치 설명에 우선한다.
+
 최종 갱신: 2026-09-16
 
 ## 현재 단계

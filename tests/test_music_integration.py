@@ -37,6 +37,7 @@ def test_regular_picture_page_is_not_promoted() -> None:
 
 
 def test_music_failure_stays_as_review_block(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("CHART_RECOGNITION_ENABLED", "false")
     def fail_model(*args, **kwargs):
         raise RuntimeError("Audiveris unavailable")
 
@@ -59,3 +60,20 @@ def test_music_failure_stays_as_review_block(monkeypatch, tmp_path) -> None:
     assert transcribed[0].type == "music"
     assert transcribed[0].error is not None
     assert "Audiveris unavailable" in (transcribed[0].text or "")
+
+
+def test_rules_summary_never_calls_ollama(monkeypatch):
+    from daisy_ocr.music.adapter import _load_services
+    _load_services()
+    from services import local_llm_summarizer as summarizer
+    monkeypatch.setenv("MUSIC_SUMMARY_MODE", "rules")
+    def unexpected(*args, **kwargs):
+        raise AssertionError("Rules mode must not contact Ollama")
+    monkeypatch.setattr(summarizer, "call_local_llm", unexpected)
+    result = summarizer.select_optional_fact_ids([
+        {"id": "low", "priority": 1}, {"id": "high", "priority": 3}, {"id": "mid", "priority": 2}
+    ], 2)
+    assert result["selectedIds"] == ["high", "mid"]
+    assert result["selectedBy"] == "deterministic_rules"
+    assert result["issues"] == []
+    assert not result["fallbackUsed"]

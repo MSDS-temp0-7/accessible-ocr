@@ -1,5 +1,7 @@
 # AI 작업 컨텍스트: Accessible OCR
 
+> 최신 모델 연결 상태(2026-09-18)는 `docs/TEAM_MODEL_INTEGRATION.md`를 먼저 읽는다. 팀 Qwen 도표 설명이 별도 GPU 프로세스로 연결됐고, Audiveris 신규 인식은 일반 PowerShell에서 확인했다. 아래의 그래프 모델 대기·Audiveris 미설치 기록은 이전 상태다. 표 셀 구조·수식·최종 DAISY 출력은 여전히 후속 구현 대상이다.
+
 ## 설계 권한과 목표
 
 - 최우선 설계 자료: `Windows_네이티브_접근형_OCR_화면설계서_v0.2.docx`, `docs/REQUIREMENTS_DECISION_DAISY.md`

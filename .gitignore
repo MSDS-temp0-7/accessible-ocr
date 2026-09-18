@@ -23,6 +23,10 @@ config/integration-api.env
 *.db-wal
 .dotnet-cli/
 .venv/
+.venv-chart/
+.model-cache/
+.tools/
+config/integration-api*.env
 __pycache__/
 *.py[cod]
 .pytest_cache/

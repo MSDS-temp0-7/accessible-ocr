@@ -39,6 +39,7 @@ if not os.environ.get("CLOVA_GATEWAY") and os.environ.get("CLOVA_OCR_SECRET"):
 from daisy_ocr.layout.detect import DEFAULT_MODEL, LayoutRegion, to_our_type
 from daisy_ocr.layout.render import render_pdf_page
 from daisy_ocr.music.adapter import music_runtime_status, recognize_music_region
+from daisy_ocr.chart.adapter import chart_runtime_status, recognize_chart_region
 from daisy_ocr.output.package import PagePackage, build_result_package
 from daisy_ocr.pipeline import PreparedPage, TranscribedRegion, merge_page, prepare_page
 
@@ -218,6 +219,32 @@ async def _transcribe_special_regions(
         if not _option_enabled(options, element_type):
             continue
         regions.append(region)
+        if element_type in {"table", "graph"} and chart_runtime_status()["enabled"]:
+            x1, y1, x2, y2 = region.bbox
+            crop = image.crop((max(0, int(x1)), max(0, int(y1)),
+                               min(image.width, max(int(x1) + 1, int(x2))),
+                               min(image.height, max(int(y1) + 1, int(y2)))))
+            try:
+                text, confidence = await asyncio.to_thread(
+                    recognize_chart_region, crop, output_root.parent / "charts",
+                    page_index=page_index, region_index=region_index,
+                )
+                error = "chart_review_required"
+            except Exception as exc:
+                message = str(exc).strip() or type(exc).__name__
+                text = "도표 영역을 찾았지만 내용 분석에 실패했습니다.\n" + message
+                fallback = _ocr_text_inside(prepared, region)
+                if fallback:
+                    text += "\nOCR로 읽은 글자: " + fallback
+                confidence = region.confidence
+                error = "chart_recognition_failed: " + message
+            finally:
+                crop.close()
+            transcribed.append(TranscribedRegion(
+                type=element_type, label=region.label, bbox=tuple(region.bbox),
+                confidence=confidence, text=text, error=error,
+            ))
+            continue
         if element_type == "music":
             x1, y1, x2, y2 = region.bbox
             crop_box = (
@@ -324,6 +351,7 @@ def health() -> dict:
         "status": "ok",
         "service": "accessible-ocr-local-api",
         "music": music_runtime_status(),
+        "chart": chart_runtime_status(),
     }
 
 

@@ -579,6 +579,9 @@ def run_audiveris(
             command,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
             timeout=timeout_seconds,
             check=False,
         )
