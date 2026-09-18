@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>문서 읽기 · 접근형 OCR 시제품</title>
+  <link rel="stylesheet" href="styles.css?v=2">
+  <script src="fixtures.js" defer></script>
+  <script src="app.js?v=2" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#reading">인식 결과로 바로 가기</a>
+  <header class="app-header">
+    <a class="brand" href="#reading" aria-label="접근형 OCR 인식 결과로 이동"><span class="brand-symbol" aria-hidden="true">A<span>·</span></span><span>접근형 OCR<small>문서를 더 읽기 쉽게</small></span></a>
+    <div class="prototype-tag"><span></span>화면 검토용 시제품</div>
+    <button id="helpBtn" class="quiet">키보드 도움말 <kbd>?</kbd></button>
+  </header>
+  <main>
+    <section class="document-header" aria-labelledby="documentTitle">
+      <div><div class="eyebrow">내 문서 <span aria-hidden="true">/</span> 예시 문서</div><h1 id="documentTitle">우리 동네 도서관 이야기</h1><p>본문·도표·악보가 포함된 화면 검토용 예시입니다.</p></div>
+      <div class="document-actions"><div class="mode-switch" role="group" aria-label="작업 모드"><button id="readerMode" aria-pressed="true">읽기 모드</button><button id="reviewMode" aria-pressed="false">검수 모드</button></div><button id="exportBtn" class="secondary">검수 기록 저장 <span aria-hidden="true">↓</span></button></div>
+    </section>
+    <section class="workspace-toolbar" aria-label="문서 탐색과 보기 설정">
+      <div class="search-wrap"><span aria-hidden="true">⌕</span><label class="sr-only" for="search">현재 페이지 인식 결과 검색</label><input id="search" type="search" placeholder="현재 페이지에서 검색" autocomplete="off"></div>
+      <label class="select-wrap"><span>유형</span><select id="typeFilter"><option value="all">모두</option><option value="text">본문</option><option value="visual">표·도표</option><option value="music">악보</option></select></label>
+      <label class="check"><input type="checkbox" id="needsOnly">검수 필요만</label>
+      <div class="view-tools"><button id="textSizeBtn" class="quiet" aria-label="글자 크기 100퍼센트. 누르면 확대">가 <span id="textSizeLabel">100%</span></button><button id="contrastBtn" class="quiet" aria-pressed="false">고대비</button><button id="sourceToggle" class="quiet" aria-pressed="false">원본 함께 보기</button></div>
+    </section>
+    <div class="workspace" id="workspace">
+      <aside class="outline" aria-label="문서 개요" id="outline" tabindex="-1">
+        <div class="section-label">문서 개요 <span>3쪽</span></div>
+        <nav aria-label="페이지 선택" id="pageNav"></nav>
+        <div class="outline-review"><div class="progress-title"><strong>검수 진행</strong><span id="progressCount"></span></div><progress id="reviewProgress" max="1" value="0" aria-label="검수 완료 항목"></progress><p id="pendingCount"></p><button id="nextNeedsSidebar" class="secondary full">다음 검수 필요 항목 <span aria-hidden="true">→</span></button></div>
+        <div class="outline-note"><span class="small-icon" aria-hidden="true">i</span><p>원본과 인식 결과는 같은 번호로 연결됩니다.</p></div>
+      </aside>
+      <section class="reading-panel" aria-labelledby="readingTitle" id="reading" tabindex="-1">
+        <header class="panel-header"><div><div class="eyebrow" id="modeLabel">READING / 읽기</div><h2 id="readingTitle">인식 결과</h2></div><span class="page-counter" id="pageCounter"></span></header>
+        <div class="reading-meta"><span id="pageDescription"></span><span id="visibleCount"></span></div>
+        <div id="blockList" class="block-list"></div>
+        <div class="empty-state" id="emptyState" hidden><strong>일치하는 항목이 없습니다.</strong><p>검색어나 필터를 바꿔 주세요.</p><button class="secondary" id="clearFilters">검색·필터 초기화</button></div>
+        <footer class="reading-footer"><button id="previousPage" class="quiet">← 이전 페이지</button><span id="readingFooterLabel"></span><button id="nextPage" class="quiet">다음 페이지 →</button></footer>
+      </section>
+      <section class="source-panel" aria-labelledby="sourceTitle" id="sourcePanel" hidden tabindex="-1">
+        <header class="panel-header"><div><div class="eyebrow">ORIGINAL / 원본 대조</div><h2 id="sourceTitle">원본 이미지</h2></div><div class="zoom-tools"><button id="zoomOut" class="icon-button" aria-label="원본 이미지 축소">−</button><output id="zoomLabel" aria-label="원본 확대율">100%</output><button id="zoomIn" class="icon-button" aria-label="원본 이미지 확대">+</button></div></header>
+        <div class="source-hint"><span class="selection-dot" aria-hidden="true"></span><span id="sourceHint">항목을 선택하면 원본 위치가 강조됩니다.</span><button id="fitSource" class="quiet">맞춤</button></div>
+        <div class="image-scroll" id="imageScroll"><div class="page-image" id="pageImage"><img id="sourceImage" alt=""><div id="overlays" class="overlays" role="group" aria-label="원본 영역 선택"></div></div></div>
+        <div class="source-caption">화면 검토용 예시 원본 · 실제 OCR을 실행하지 않습니다.</div>
+      </section>
+    </div>
+    <section id="reviewBar" class="review-bar" aria-label="선택 항목 검수" hidden><div><span class="eyebrow">선택한 항목</span><strong id="selectionLabel"></strong><span id="selectionStatus"></span></div><div class="review-actions"><button id="editBtn" class="secondary">내용 수정</button><button id="flagBtn" class="secondary">재검수 필요</button><button id="approveBtn" class="primary">확인 완료 · 다음 <span aria-hidden="true">→</span></button></div></section>
+    <footer class="app-footer"><span id="saveState">이 브라우저에 검수 기록 저장</span><span>키보드로 탐색 가능 <span aria-hidden="true">·</span> 음성 자동 재생 없음</span></footer>
+  </main>
+  <div id="announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  <dialog id="helpDialog" aria-labelledby="helpTitle"><div class="dialog-header"><h2 id="helpTitle">키보드로 빠르게 검수하기</h2><button class="icon-button" data-close="helpDialog" aria-label="도움말 닫기">×</button></div><p>화면의 모든 버튼은 Tab과 Enter로도 사용할 수 있습니다.</p><dl class="shortcuts"><div><dt><kbd>Alt</kbd> + <kbd>↓</kbd> / <kbd>↑</kbd></dt><dd>다음 / 이전 항목</dd></div><div><dt><kbd>Alt</kbd> + <kbd>N</kbd></dt><dd>다음 검수 필요 항목</dd></div><div><dt><kbd>Ctrl</kbd> + <kbd>Enter</kbd></dt><dd>검수 모드에서 확인 완료 후 다음 항목</dd></div><div><dt><kbd>Alt</kbd> + <kbd>1</kbd> / <kbd>2</kbd> / <kbd>3</kbd></dt><dd>개요 / 인식 결과 / 원본으로 이동</dd></div><div><dt><kbd>Esc</kbd></dt><dd>대화상자 닫기</dd></div></dl><p>스크린리더에서는 제목과 영역 탐색으로 본문·표·악보를 바로 찾을 수 있습니다. 상세 읽기는 각 항목의 펼치기 버튼을 사용하세요.</p><label class="check"><input type="checkbox" id="shortcutsEnabled" checked>추가 단축키 사용 (스크린리더 단축키와 겹치면 해제)</label><button id="resetBtn" class="quiet danger">예시 검수 기록 초기화</button></dialog>
+  <dialog id="editDialog" aria-labelledby="editTitle"><form id="editForm"><div class="dialog-header"><h2 id="editTitle">인식 내용 수정</h2><button type="button" class="icon-button" data-close="editDialog" aria-label="수정 취소하고 닫기">×</button></div><p id="editContext"></p><label for="editText">수정할 내용</label><textarea id="editText" rows="8" required></textarea><details><summary>AI 인식 원문 확인</summary><p id="originalText" class="preserve"></p></details><p class="muted">저장은 내용을 보관합니다. 검수 완료는 별도로 표시해 주세요.</p><div class="dialog-actions"><button type="button" class="secondary" data-close="editDialog">취소</button><button class="primary" type="submit">수정 저장</button></div></form></dialog>
+  <dialog id="resetDialog" aria-labelledby="resetTitle"><h2 id="resetTitle">예시 기록을 초기화할까요?</h2><p>이 시제품에서 수정한 내용과 검수 상태가 예시의 처음 상태로 돌아갑니다.</p><div class="dialog-actions"><button class="secondary" data-close="resetDialog">취소</button><button class="primary" id="confirmReset">초기화</button></div></dialog>
+</body>
+</html>
