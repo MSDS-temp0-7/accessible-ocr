@@ -14,6 +14,7 @@ public partial class MainWindow : System.Windows.Window
         DataContext = new AppViewModel(
             new HttpAuthenticationService(httpClient, options),
             new HttpDocumentService(httpClient, options),
-            new WindowsFilePicker());
+            new WindowsFilePicker(),
+            new DocumentExporter());
     }
 }

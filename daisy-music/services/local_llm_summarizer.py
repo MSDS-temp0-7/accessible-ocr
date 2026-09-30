@@ -44,6 +44,19 @@ LOCAL_LLM_TIMEOUT = int(
     )
 )
 
+# Qwen3 계열은 기본적으로 사고 과정을 생성할 수 있다. 이 파이프라인은
+# 제한된 Fact ID만 JSON으로 받아야 하므로 사고 출력을 끄고, 도표 VLM과
+# GPU 메모리를 오래 경쟁하지 않도록 요청 완료 후 모델을 내린다.
+LOCAL_LLM_THINK = os.getenv(
+    "LOCAL_LLM_THINK",
+    "false",
+).lower() in {"1", "true", "yes", "on"}
+
+LOCAL_LLM_KEEP_ALIVE = os.getenv(
+    "LOCAL_LLM_KEEP_ALIVE",
+    "0",
+)
+
 
 # 최종 전체 요약에 들어갈 Fact 최대 개수
 MAX_SUMMARY_FACTS = 4
@@ -1109,6 +1122,12 @@ def call_local_llm(
 
         "stream":
             False,
+
+        "think":
+            LOCAL_LLM_THINK,
+
+        "keep_alive":
+            LOCAL_LLM_KEEP_ALIVE,
 
         "format":
             "json",

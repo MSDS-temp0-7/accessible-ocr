@@ -31,9 +31,16 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "Python 의존성 설치에 실패했습니다." }
     }
 
+    $pythonExecutable = Join-Path $repositoryRoot ".venv\Scripts\python.exe"
+    if (-not (Test-Path -LiteralPath $pythonExecutable)) {
+        throw "Python 가상환경이 없습니다. -SkipSync 없이 한 번 실행하세요."
+    }
+
     Write-Host "Accessible OCR 로컬 API를 http://localhost:8000 에서 시작합니다."
     Write-Host "이 창을 닫으면 OCR API도 종료됩니다."
-    & $uvExecutable run --no-sync daisy-ocr-api
+    # 설치된 wheel이 아니라 현재 저장소 소스를 직접 실행한다. 그래야
+    # -SkipSync 개발 실행에서도 방금 수정한 코드가 즉시 반영된다.
+    & $pythonExecutable -m daisy_ocr.server
     if ($LASTEXITCODE -ne 0) { throw "로컬 OCR API 실행에 실패했습니다." }
 }
 finally {

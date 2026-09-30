@@ -1,11 +1,20 @@
 # 팀 도표·악보 모델 적용 (2026-09-18)
 
+> 2026-09-28 보완: 로컬 Audiveris를 5.11.0으로 연결하고 음악 요약을
+> Ollama `qwen3:14b`로 검증했다. 악보 영역은 15% 확장한 뒤
+> `No system found`에서 페이지 폭·35% 세로 여백으로 자동 재시도한다.
+> 실제 악보 실추론은 성공했지만 `ocr_test_sample.pdf`의 단순 그림은 확장
+> 후에도 Audiveris system으로 인식되지 않으므로 시연에는 실제 악보 PDF를
+> 사용한다. 현재 Python 회귀 테스트는 20개 통과한다.
+
 ## 적용 결과
 
 - 도표: 바탕화면 `ai_engine`의 F3 코드를 저장소에 복사하고 Qwen2.5-VL-7B-Instruct를 4비트로 실행한다. 원본 폴더와 전달받은 `.venv`는 수정하지 않았다.
 - 악보: 바탕화면 `daisy-music/services`와 기존 저장소를 비교했다. 줄바꿈을 제외하면 기존 Windows 경로 탐색 보완 이외의 핵심 로직은 같았다. 기존 Windows 호환 코드를 유지하고 Audiveris 5.10.2 실행 파일을 연결했다.
 - 본문: 기존 CLOVA OCR을 유지한다. 실제 키는 변경하지 않았다.
-- 아직 완성 DAISY 내보내기는 아니다. 결과는 WPF 검수용 `book.xml`, `review.json`, 페이지 이미지 ZIP이다.
+- 모델 서버의 결과는 여전히 WPF 검수용 `book.xml`, `review.json`, 페이지
+  이미지 ZIP이다. 별도의 WPF WF-08 내보내기가 이 검수 결과를 textNCX
+  DAISY3 ZIP과 HTML 검수 보고서로 변환한다.
 
 ## 실행
 
@@ -50,16 +59,16 @@ AUDIVERIS_CMD=이_PC에_준비된_Audiveris.exe_절대경로
 2. 표/그림 영역을 잘라 F3 ChartAnalyzer에 전달한다. 이미 잘린 영역이므로 팀 코드의 두 번째 YOLO 검출은 생략한다.
 3. 별도 `.venv-chart` 프로세스가 Qwen 모델을 최초 한 번 로드하고 이후 영역에서 재사용한다. 기존 CPU 레이아웃 코드의 `CUDA_VISIBLE_DEVICES=-1`이 GPU 프로세스로 전파되지 않도록 분리했다.
 4. 제목·축·범례·수치·설명을 WPF가 읽는 TranscribedRegion으로 변환한다. 이 분석은 표의 셀 구조 복원 기능을 대신하지 않는다.
-5. 악보 문맥이 있는 페이지의 가장 큰 Picture 영역은 기존 규칙으로 Music에 전달한다. Audiveris가 새 MusicXML/OMR을 만들고 팀 파이프라인이 마디별 읽기·요약을 생성한다.
+5. 악보 문맥이 있는 페이지의 가장 큰 Picture 영역은 사방 15% 확장해 Music에 전달한다. `No system found`이면 페이지 전체 폭과 더 큰 세로 여백으로 한 번 재시도한다. Audiveris가 새 MusicXML/OMR을 만들면 팀 파이프라인이 마디별 읽기·요약을 생성한다.
 6. 한 특수 영역이 실패하면 해당 영역에 오류와 검수 필요 상태를 표시하고 나머지 문서 처리는 계속한다. 도표 실패 시 해당 영역에서 CLOVA가 읽은 글자도 보존한다.
 
 ## Ollama는 선택 사항
 
-현재 `MUSIC_SUMMARY_MODE=rules`로 설정했다. 음악 구조에서 우선순위가 높은 사실을 규칙으로 선택하므로 Ollama를 호출하지 않는다. 음표·쉼표·마디 인식은 Audiveris/MusicXML이 담당하고, 마디별 읽기 생성에도 Ollama는 필요 없다.
+기본 예시는 `MUSIC_SUMMARY_MODE=auto`이며 Ollama를 먼저 사용하고 실패하면 같은 규칙 방식으로 자동 전환한다. 음표·쉼표·마디 인식은 Audiveris/MusicXML이 담당하고, Ollama는 검증된 음악 사실 중 요약에 넣을 항목만 고른다.
 
-기존 코드의 `deterministic_fallback`은 Ollama 접속 실패 후 같은 규칙 방식을 사용했다는 뜻이다. 이제는 명시적으로 규칙 모드를 선택하므로 `deterministic_rules`가 표시되며 불필요한 접속 오류를 만들지 않는다.
+Ollama를 사용하지 않을 PC는 `MUSIC_SUMMARY_MODE=rules`로 바꿀 수 있다. 이 경우 `deterministic_rules`가 표시된다. `auto`에서 접속이나 추론이 실패하면 `deterministic_fallback`으로 표시되며 전체 악보 처리는 계속된다.
 
-나중에 Ollama를 사용하려면 설치 후 `qwen3:8b`를 준비하고 `MUSIC_SUMMARY_MODE=auto`로 바꾼 뒤 API를 재시작한다. 기본 주소는 `http://localhost:11434`다. 현재 구현에서 LLM의 역할은 검증된 음악 사실 중 요약에 넣을 항목을 고르는 것이다. 도표 모델도 GPU에 상주하므로 8GB GPU에서 두 모델의 동시 적재·메모리 사용을 별도로 검증해야 한다. 이번 작업에서는 Ollama를 설치하지 않았다.
+로컬 기본 시연 설정은 설치된 `qwen3:14b`를 `LOCAL_LLM_MODEL=qwen3:14b`로 지정한다. 기존 `qwen3:8b`도 같은 역할로 사용할 수 있다. 14B는 더 큰 텍스트 모델이지만 이미지 입력은 처리하지 않으므로 도표용 `Qwen2.5-VL-7B-Instruct`를 대체하지 않는다. 기본 주소는 `http://127.0.0.1:11434`다. `LOCAL_LLM_THINK=false`로 JSON 외 사고 출력을 막고 `LOCAL_LLM_KEEP_ALIVE=0`으로 요청 후 모델을 내려 두 GPU 모델의 메모리 경쟁을 줄인다.
 
 ## 확인한 문제와 수정
 
@@ -97,4 +106,5 @@ AUDIVERIS_CMD=이_PC에_준비된_Audiveris.exe_절대경로
 - 일반 그림도 Picture로 분류되므로 도표 프롬프트에 전달될 수 있다. 그림/그래프 분류 개선이 필요하다.
 - 표 내용의 텍스트 설명은 생성하지만 셀·병합·행열 구조의 완전한 복원은 구현하지 않았다.
 - 모델이 PASS를 반환해도 사람의 검수를 대신하지 않으며 WPF에서는 특수 영역을 needs_review로 유지한다.
-- 검수 내용 영구 저장, 완성 DAISY 패키징·검증·검수 보고서는 별도 후속 개발이다.
+- 검수 내용 영구 저장은 후속 개발이다. textNCX DAISY 패키징과 HTML 검수
+  보고서는 WPF에 구현됐으며, 외부 표준 검증기·DAISY 플레이어 호환성 검증은 남아 있다.

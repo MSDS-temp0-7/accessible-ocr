@@ -11,7 +11,11 @@ public sealed class MainViewModel : ObservableObject
     private readonly IDocumentService _documentService;
     private object _currentView;
 
-    public MainViewModel(IDocumentService documentService, IFilePicker filePicker, AuthenticatedUser currentUser)
+    public MainViewModel(
+        IDocumentService documentService,
+        IFilePicker filePicker,
+        IDocumentExporter documentExporter,
+        AuthenticatedUser currentUser)
     {
         _documentService = documentService;
         CurrentUser = currentUser;
@@ -21,7 +25,7 @@ public sealed class MainViewModel : ObservableObject
         TableDetail = new TableDetailViewModel();
         MathDetail = new MathDetailViewModel();
         MusicDetail = new MusicDetailViewModel();
-        Export = new ExportViewModel(Capabilities.CanExport);
+        Export = new ExportViewModel(Capabilities.CanExport, filePicker, documentExporter);
         ReviewWorkspace = new ReviewWorkspaceViewModel(documentService, NavigateTo, Capabilities.CanReview);
         Analysis = new AnalysisViewModel(RunPipelineAsync);
 

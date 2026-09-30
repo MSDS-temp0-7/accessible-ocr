@@ -1,6 +1,6 @@
 # Accessible OCR
 
-점자도서관에서 시각장애인용 DAISY 자료를 제작·검수하기 위한 Windows WPF 앱입니다. 사용자가 PDF를 선택하면 같은 PC의 Python API가 CLOVA OCR과 DocLayout-YOLO를 실행하고, DAISY3 DTBook(`book.xml`)과 검수 사이드카(`review.json`)를 검수 화면에 표시합니다. 제품의 필수 완료 조건은 검수된 문서를 완성 DAISY 패키지와 사용자용 검수 보고서로 내보내고, Windows 내레이터·NVDA 등 스크린리더로 주요 흐름을 수행할 수 있게 하는 것입니다.
+점자도서관에서 시각장애인용 DAISY 자료를 제작·검수하기 위한 Windows WPF 앱입니다. 사용자가 PDF를 선택하면 같은 PC의 Python API가 CLOVA OCR과 DocLayout-YOLO를 실행하고, DAISY3 DTBook(`book.xml`)과 검수 사이드카(`review.json`)를 검수 화면에 표시합니다. 검수 화면의 수정 내용을 텍스트형 DAISY3 패키지와 사용자용 HTML 검수 보고서로 로컬 저장할 수 있습니다. 외부 DAISY 규격 검증기 통과와 Windows 내레이터·NVDA 전체 흐름 검증은 완료 조건으로 계속 남아 있습니다.
 
 ## 팀원 시작 방법
 
@@ -10,6 +10,10 @@
 4. PowerShell에서 `.\scripts\start-local-ocr.ps1`을 실행하고 창을 켜 둡니다.
 5. `src/AccessibleOcr.Desktop/appsettings.Local.json.example`을 같은 폴더에 `appsettings.Local.json`으로 복사합니다. 기본 로컬 주소 `http://localhost:8000`을 그대로 사용할 수 있습니다.
 6. Visual Studio에서 `F5`를 누르고 Debug 전용 `개발 미리보기로 열기`를 선택합니다.
+
+검수 결과의 Word `.docx` 저장은 Word 설치나 외부 API 없이 동작합니다.
+한글 `.hwpx` 저장은 대상 PC에 한컴오피스 한/글 2010 이상이 설치되어 있어야
+하며 API 키는 필요하지 않습니다.
 
 앱은 로그인 화면에서 시작합니다. 인증 서버가 아직 없다면 Debug 빌드에서만 표시되는 `개발 미리보기로 열기`로 UI를 확인할 수 있습니다. 이 기능은 실제 로그인이나 서버 권한 검사를 대신하지 않으며 Release 빌드에서는 표시되지 않습니다.
 
@@ -24,6 +28,8 @@
 - [AI 컨텍스트](docs/AI_CONTEXT.md): AI에게 프로젝트 맥락을 전달할 때 사용하는 요약
 - [OCR 파이프라인 연동](docs/OCR_PIPELINE_INTEGRATION.md): Job API, 결과 패키지, 미확정 계약
 - [실제 PDF OCR 시연](docs/LOCAL_OCR_DEMO.md): CLOVA 키 설정, 로컬 API와 WPF 실행 순서, 현재 제한
+- [Word·한글 내보내기](docs/EXPORT_INTEGRATION.md): DOCX/HWPX 저장 방식, 설치 조건, 현재 표현 범위
+- [DAISY3 내보내기](docs/DAISY_EXPORT_INTEGRATION.md): textNCX 패키지 구성, 검수 보고서, 기본 검사와 남은 규격 검증
 - [악보 인식 모델 연결](docs/MUSIC_MODEL_INTEGRATION.md): Audiveris 설치, 환경설정, 악보 결과와 오류 처리
 - [Git 추적·제외 파일 안내](docs/GIT_TRACKING_GUIDE.md): 업로드 대상, 로컬 전용 파일, clone 후 준비 방법
 - [구현 진행 현황](docs/IMPLEMENTATION_STATUS.md): 현재 구현 범위, CLOVA/모델 키 교체 위치, 다음 작업 조건
