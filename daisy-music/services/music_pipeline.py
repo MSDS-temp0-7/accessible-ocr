@@ -2,6 +2,7 @@ from pathlib import Path
 import json
 import subprocess
 import sys
+import os
 
 # ============================================================
 # Local service imports
@@ -117,6 +118,7 @@ def run_musicxml_parser(
 
     command = [
         sys.executable,
+        "-X", "utf8",
         str(parser_script),
         str(mxl_path),
         str(output_path),
@@ -126,6 +128,10 @@ def run_musicxml_parser(
         command,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=180,
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
     )
 
     if result.returncode != 0:

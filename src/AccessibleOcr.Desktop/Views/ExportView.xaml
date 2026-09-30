@@ -42,9 +42,9 @@
                             automation:AutomationProperties.Name="필수 산출물 DAISY3 표준 패키지와 검수 보고서">
                         <StackPanel>
                             <TextBlock FontWeight="Bold" Foreground="#0C355B" Text="필수 산출물" />
-                            <TextBlock Margin="0,7,0,0" Text="DAISY3 표준 패키지 · 필수" />
-                            <TextBlock Margin="0,3,0,0" Text="사용자용 검수 보고서 · 필수" />
-                            <TextBlock Margin="0,7,0,0" FontSize="13" Foreground="#536B82" Text="구조화 DOCX와 접근 가능한 HTML은 보조 출력입니다." />
+                            <TextBlock Margin="0,7,0,0" Text="텍스트형 DAISY3 패키지 · 저장 가능" />
+                            <TextBlock Margin="0,3,0,0" Text="사용자용 HTML 검수 보고서 · 함께 생성" />
+                            <TextBlock Margin="0,7,0,0" FontSize="13" Foreground="#536B82" Text="검수용 DOCX와 HWPX는 이 PC에서 바로 저장할 수 있습니다." />
                         </StackPanel>
                     </Border>
 
@@ -87,7 +87,11 @@
                 <Button Width="110" Height="38" Margin="0,0,10,0"
                         Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                         CommandParameter="Review" Content="이전" />
-                <Button Width="146" Height="38" Command="{Binding ExportCommand}" Content="DAISY 내보내기"
+                <Button Width="132" Height="38" Margin="0,0,10,0" Command="{Binding ExportDocxCommand}" Content="Word (.docx)"
+                        automation:AutomationProperties.Name="검수 결과를 Word DOCX 파일로 내보내기" />
+                <Button Width="132" Height="38" Margin="0,0,10,0" Command="{Binding ExportHwpxCommand}" Content="한글 (.hwpx)"
+                        automation:AutomationProperties.Name="검수 결과를 한글 HWPX 파일로 내보내기" />
+                <Button Width="146" Height="38" Command="{Binding ExportCommand}" Content="DAISY3 (.zip)"
                         automation:AutomationProperties.Name="DAISY3 패키지와 검수 보고서 내보내기" />
             </StackPanel>
         </Border>

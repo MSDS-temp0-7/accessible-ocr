@@ -16,5 +16,24 @@ public sealed class WindowsFilePicker : IFilePicker
 
         return Task.FromResult(dialog.ShowDialog() == true ? dialog.FileName : null);
     }
+
+    public Task<string?> PickSaveFileAsync(
+        string title,
+        string suggestedFileName,
+        string filter,
+        string defaultExtension)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = title,
+            FileName = suggestedFileName,
+            Filter = filter,
+            DefaultExt = defaultExtension,
+            AddExtension = true,
+            OverwritePrompt = true
+        };
+
+        return Task.FromResult(dialog.ShowDialog() == true ? dialog.FileName : null);
+    }
 }
 

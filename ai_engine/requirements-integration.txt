@@ -1,0 +1,6 @@
+# CUDA torch/torchvision are installed separately; see scripts/setup-chart.ps1.
+# No second YOLO is needed: the OCR server already provides cropped regions.
+transformers==4.57.1
+accelerate>=1.2,<2
+bitsandbytes>=0.46.1,<0.50
+pillow>=11,<13

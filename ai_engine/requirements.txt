@@ -1,0 +1,8 @@
+torch
+transformers
+accelerate
+qwen-vl-utils
+pillow
+ultralytics
+huggingface_hub
+bitsandbytes>=0.46.1

@@ -39,6 +39,7 @@ if not os.environ.get("CLOVA_GATEWAY") and os.environ.get("CLOVA_OCR_SECRET"):
 from daisy_ocr.layout.detect import DEFAULT_MODEL, LayoutRegion, to_our_type
 from daisy_ocr.layout.render import render_pdf_page
 from daisy_ocr.music.adapter import music_runtime_status, recognize_music_region
+from daisy_ocr.chart.adapter import chart_runtime_status, recognize_chart_region
 from daisy_ocr.output.package import PagePackage, build_result_package
 from daisy_ocr.pipeline import PreparedPage, TranscribedRegion, merge_page, prepare_page
 
@@ -189,6 +190,46 @@ def _ocr_text_inside(prepared: PreparedPage, region: LayoutRegion) -> str:
     return " ".join(fragments)
 
 
+def _expanded_music_crop_boxes(
+    bbox: list[float],
+    image_width: int,
+    image_height: int,
+) -> list[tuple[int, int, int, int]]:
+    """Audiveris에 원래 검출 영역보다 넓은 악보 문맥을 제공한다.
+
+    첫 시도는 사방 15% 여백을 추가한다. Audiveris가 오선은 찾았지만
+    system을 구성하지 못하면 두 번째 상자는 페이지 전체 폭과 35% 세로
+    여백을 사용한다. 검수 UI의 원래 객체 좌표는 바꾸지 않는다.
+    """
+    x1, y1, x2, y2 = bbox
+    width = max(1.0, x2 - x1)
+    height = max(1.0, y2 - y1)
+
+    def box(horizontal_margin: float, vertical_margin: float, full_width: bool = False):
+        left = 0 if full_width else max(0, int(x1 - width * horizontal_margin))
+        right = image_width if full_width else min(
+            image_width,
+            max(left + 1, int(x2 + width * horizontal_margin)),
+        )
+        top = max(0, int(y1 - height * vertical_margin))
+        bottom = min(
+            image_height,
+            max(top + 1, int(y2 + height * vertical_margin)),
+        )
+        return left, top, right, bottom
+
+    boxes = [
+        box(0.15, 0.15),
+        box(0.0, 0.35, full_width=True),
+    ]
+    return list(dict.fromkeys(boxes))
+
+
+def _should_retry_music_crop(message: str) -> bool:
+    normalized = message.lower()
+    return "no system found" in normalized or "error in reaching step page" in normalized
+
+
 def _encode_page_preview(image) -> bytes:
     """검수 화면용 페이지 이미지를 JPEG로 직렬화한다."""
     output = io.BytesIO()
@@ -218,22 +259,61 @@ async def _transcribe_special_regions(
         if not _option_enabled(options, element_type):
             continue
         regions.append(region)
-        if element_type == "music":
+        if element_type in {"table", "graph"} and chart_runtime_status()["enabled"]:
             x1, y1, x2, y2 = region.bbox
-            crop_box = (
-                max(0, int(x1)), max(0, int(y1)),
-                min(image.width, max(int(x1) + 1, int(x2))),
-                min(image.height, max(int(y1) + 1, int(y2))),
-            )
-            crop = image.crop(crop_box)
+            crop = image.crop((max(0, int(x1)), max(0, int(y1)),
+                               min(image.width, max(int(x1) + 1, int(x2))),
+                               min(image.height, max(int(y1) + 1, int(y2)))))
             try:
-                result = await asyncio.to_thread(
-                    recognize_music_region,
-                    crop,
-                    output_root,
-                    page_index=page_index,
-                    region_index=region_index,
+                text, confidence = await asyncio.to_thread(
+                    recognize_chart_region, crop, output_root.parent / "charts",
+                    page_index=page_index, region_index=region_index,
                 )
+                error = "chart_review_required"
+            except Exception as exc:
+                message = str(exc).strip() or type(exc).__name__
+                text = "도표 영역을 찾았지만 내용 분석에 실패했습니다.\n" + message
+                fallback = _ocr_text_inside(prepared, region)
+                if fallback:
+                    text += "\nOCR로 읽은 글자: " + fallback
+                confidence = region.confidence
+                error = "chart_recognition_failed: " + message
+            finally:
+                crop.close()
+            transcribed.append(TranscribedRegion(
+                type=element_type, label=region.label, bbox=tuple(region.bbox),
+                confidence=confidence, text=text, error=error,
+            ))
+            continue
+        if element_type == "music":
+            result = None
+            last_error: Exception | None = None
+            crop_boxes = _expanded_music_crop_boxes(
+                region.bbox,
+                image.width,
+                image.height,
+            )
+            for attempt, crop_box in enumerate(crop_boxes):
+                crop = image.crop(crop_box)
+                try:
+                    result = await asyncio.to_thread(
+                        recognize_music_region,
+                        crop,
+                        output_root,
+                        page_index=page_index,
+                        region_index=region_index,
+                    )
+                    break
+                except Exception as exc:
+                    last_error = exc
+                    message = str(exc).strip() or type(exc).__name__
+                    if attempt == 0 and _should_retry_music_crop(message):
+                        continue
+                    break
+                finally:
+                    crop.close()
+
+            if result is not None:
                 transcribed.append(TranscribedRegion(
                     type="music",
                     label=region.label,
@@ -242,22 +322,34 @@ async def _transcribe_special_regions(
                     text=result.text,
                     error="music_review_required" if result.needs_review else None,
                 ))
-            except Exception as exc:
-                message = str(exc).strip() or type(exc).__name__
+            else:
+                message = (
+                    str(last_error).strip()
+                    if last_error is not None
+                    else "알 수 없는 악보 인식 오류"
+                )
+                if _should_retry_music_crop(message):
+                    guidance = (
+                        "Audiveris는 실행됐지만 확장한 영역에서도 완전한 악보 "
+                        "시스템을 찾지 못했습니다. 실제 인쇄·스캔 악보인지, "
+                        "오선·마디선·음자리표가 모두 포함됐는지 확인하세요."
+                    )
+                else:
+                    guidance = (
+                        "악보 인식 실행 중 오류가 발생했습니다. "
+                        "Audiveris와 AUDIVERIS_CMD 설정을 확인하세요."
+                    )
                 transcribed.append(TranscribedRegion(
                     type="music",
                     label=region.label,
                     bbox=tuple(region.bbox),
                     confidence=region.confidence,
                     text=(
-                        "악보 영역을 찾았지만 악보 인식기를 실행하지 못했습니다. "
-                        "Audiveris와 AUDIVERIS_CMD 설정을 확인한 뒤 다시 분석하세요.\n"
+                        guidance + "\n"
                         f"오류: {message}"
                     ),
                     error=f"music_recognition_failed: {message}",
                 ))
-            finally:
-                crop.close()
             continue
 
         recognized_text = _ocr_text_inside(prepared, region)
@@ -324,6 +416,7 @@ def health() -> dict:
         "status": "ok",
         "service": "accessible-ocr-local-api",
         "music": music_runtime_status(),
+        "chart": chart_runtime_status(),
     }
 
 

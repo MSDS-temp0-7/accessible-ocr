@@ -23,6 +23,10 @@ config/integration-api.env
 *.db-wal
 .dotnet-cli/
 .venv/
+.venv-chart/
+.model-cache/
+.tools/
+config/integration-api*.env
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -35,6 +39,10 @@ UpgradeLog.htm
 artifacts/
 *.log
 tmp/
+
+# 사용자가 내보낸 문서 산출물
+*-DAISY3.zip
+*-검수보고서.html
 
 # daisy-music 실행 중 생성되는 업로드·중간·결과 파일
 daisy-music/api_uploads/

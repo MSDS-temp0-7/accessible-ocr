@@ -1,17 +1,23 @@
+using System.IO;
 using System.Windows;
 using AccessibleOcr.Desktop.Infrastructure;
 using AccessibleOcr.Desktop.Models;
+using AccessibleOcr.Desktop.Services;
 
 namespace AccessibleOcr.Desktop.ViewModels;
 
 /// <summary>
-/// 검수 결과가 실제로 로드된 경우에만 내보내기 요약을 표시한다.
-/// DAISY3 패키지와 사용자용 검수 보고서는 필수 산출물이며, 내보내기 API 구현 후 연결한다.
+/// 실제 검수 결과를 DOCX/HWPX 또는 textNCX DAISY3 ZIP으로 로컬 저장한다.
+/// DAISY3 저장 시 사용자용 HTML 검수 보고서를 같은 위치에 함께 생성한다.
 /// </summary>
 public sealed class ExportViewModel : ObservableObject
 {
     private readonly bool _canExport;
+    private readonly IFilePicker _filePicker;
+    private readonly IDocumentExporter _documentExporter;
+    private OcrDocumentResult? _result;
     private bool _hasDocument;
+    private bool _isExporting;
     private string _documentTitle = string.Empty;
     private string _documentStructureStatus = string.Empty;
     private string _tableSummary = string.Empty;
@@ -22,13 +28,22 @@ public sealed class ExportViewModel : ObservableObject
     private string _musicStatus = string.Empty;
     private string _exportStatus = string.Empty;
 
-    public ExportViewModel(bool canExport)
+    public ExportViewModel(
+        bool canExport,
+        IFilePicker filePicker,
+        IDocumentExporter documentExporter)
     {
         _canExport = canExport;
-        ExportCommand = new RelayCommand(_ => Export(), _ => _canExport && HasDocument);
+        _filePicker = filePicker;
+        _documentExporter = documentExporter;
+        ExportDocxCommand = new AsyncRelayCommand(_ => ExportDocxAsync(), _ => CanExport());
+        ExportHwpxCommand = new AsyncRelayCommand(_ => ExportHwpxAsync(), _ => CanExport());
+        ExportCommand = new AsyncRelayCommand(_ => ExportDaisyAsync(), _ => CanExport());
     }
 
-    public RelayCommand ExportCommand { get; }
+    public AsyncRelayCommand ExportDocxCommand { get; }
+    public AsyncRelayCommand ExportHwpxCommand { get; }
+    public AsyncRelayCommand ExportCommand { get; }
 
     public bool HasDocument
     {
@@ -42,7 +57,19 @@ public sealed class ExportViewModel : ObservableObject
 
             OnPropertyChanged(nameof(ContentVisibility));
             OnPropertyChanged(nameof(EmptyStateVisibility));
-            ExportCommand.RaiseCanExecuteChanged();
+            RaiseExportCommandState();
+        }
+    }
+
+    public bool IsExporting
+    {
+        get => _isExporting;
+        private set
+        {
+            if (SetProperty(ref _isExporting, value))
+            {
+                RaiseExportCommandState();
+            }
         }
     }
 
@@ -105,6 +132,7 @@ public sealed class ExportViewModel : ObservableObject
 
     public void Load(OcrDocumentResult result)
     {
+        _result = result;
         var blocks = result.Blocks;
         var needsReview = blocks.Count(block => block.ReviewStatus != ReviewStatus.Reviewed);
         var tables = blocks.Count(block => block.Type is BlockType.Table or BlockType.Graph);
@@ -120,13 +148,15 @@ public sealed class ExportViewModel : ObservableObject
         MusicSummary = $"악보 {music}";
         MusicStatus = music == 0 ? "해당 없음" : "검수 대상";
         ExportStatus = needsReview == 0
-            ? "검수가 완료되었습니다. DAISY3 패키지와 검수 보고서 생성 준비 상태입니다."
-            : $"검수가 필요한 항목 {needsReview}건이 있습니다. DAISY3 패키지와 검수 보고서에 해당 상태가 기록됩니다.";
+            ? "검수가 완료되었습니다. DAISY3, Word와 한글 파일을 로컬로 저장할 수 있습니다."
+            : $"검수가 필요한 항목 {needsReview}건이 있습니다. 내보낸 파일과 검수 보고서에 해당 상태가 함께 기록됩니다.";
         HasDocument = true;
     }
 
     public void Reset()
     {
+        _result = null;
+        IsExporting = false;
         HasDocument = false;
         DocumentTitle = string.Empty;
         DocumentStructureStatus = string.Empty;
@@ -139,13 +169,147 @@ public sealed class ExportViewModel : ObservableObject
         ExportStatus = string.Empty;
     }
 
-    private void Export()
+    private async Task ExportDocxAsync()
     {
-        if (!HasDocument)
+        if (_result is null)
         {
             return;
         }
 
-        ExportStatus = "필수 DAISY3 패키지와 검수 보고서 내보내기 API가 아직 구현되지 않았습니다.";
+        var path = await _filePicker.PickSaveFileAsync(
+            "검수 결과를 Word 문서로 저장",
+            $"{SuggestedBaseName()}.docx",
+            "Word 문서 (*.docx)|*.docx",
+            ".docx");
+        if (path is null)
+        {
+            return;
+        }
+
+        await RunExportAsync(
+            () => _documentExporter.ExportDocxAsync(_result, path),
+            $"Word 문서를 저장했습니다: {path}");
+    }
+
+    private async Task ExportHwpxAsync()
+    {
+        if (_result is null)
+        {
+            return;
+        }
+
+        var path = await _filePicker.PickSaveFileAsync(
+            "검수 결과를 한글 문서로 저장",
+            $"{SuggestedBaseName()}.hwpx",
+            "한글 표준 문서 (*.hwpx)|*.hwpx",
+            ".hwpx");
+        if (path is null)
+        {
+            return;
+        }
+
+        await RunExportAsync(
+            () => _documentExporter.ExportHwpxAsync(_result, path),
+            $"한글 문서를 저장했습니다: {path}");
+    }
+
+    private async Task RunExportAsync(Func<Task> export, string successMessage)
+    {
+        IsExporting = true;
+        ExportStatus = "파일을 생성하는 중입니다.";
+        try
+        {
+            await export();
+            ExportStatus = successMessage;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            ExportStatus = "선택한 위치에 파일을 저장할 권한이 없습니다. 다른 폴더를 선택하세요.";
+        }
+        catch (IOException exception)
+        {
+            ExportStatus = $"파일을 저장하지 못했습니다. 파일이 열려 있는지 확인하세요. ({exception.Message})";
+        }
+        catch (InvalidOperationException exception)
+        {
+            ExportStatus = exception.Message;
+        }
+        catch (Exception exception)
+        {
+            ExportStatus = $"내보내기 중 예상하지 못한 오류가 발생했습니다. ({exception.Message})";
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
+    private async Task ExportDaisyAsync()
+    {
+        if (_result is null)
+        {
+            return;
+        }
+
+        var path = await _filePicker.PickSaveFileAsync(
+            "검수 결과를 DAISY3 패키지로 저장",
+            $"{SuggestedBaseName()}-DAISY3.zip",
+            "DAISY3 패키지 (*.zip)|*.zip",
+            ".zip");
+        if (path is null)
+        {
+            return;
+        }
+
+        IsExporting = true;
+        ExportStatus = "DAISY3 본문·탐색·패키지와 검수 보고서를 생성하는 중입니다.";
+        try
+        {
+            var outcome = await _documentExporter.ExportDaisy3Async(_result, path);
+            ExportStatus =
+                $"DAISY3 패키지를 저장했습니다: {outcome.PackagePath}\n" +
+                $"검수 보고서: {outcome.ReviewReportPath}\n" +
+                $"기본 구조 검사 {outcome.ValidationMessages.Count}개 항목 통과";
+        }
+        catch (UnauthorizedAccessException)
+        {
+            ExportStatus = "선택한 위치에 파일을 저장할 권한이 없습니다. 다른 폴더를 선택하세요.";
+        }
+        catch (IOException exception)
+        {
+            ExportStatus = $"DAISY3 파일을 저장하지 못했습니다. 파일이 열려 있는지 확인하세요. ({exception.Message})";
+        }
+        catch (InvalidOperationException exception)
+        {
+            ExportStatus = exception.Message;
+        }
+        catch (Exception exception)
+        {
+            ExportStatus = $"DAISY3 내보내기 중 오류가 발생했습니다. ({exception.Message})";
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
+    private bool CanExport() => _canExport && HasDocument && _result is not null && !IsExporting;
+
+    private string SuggestedBaseName()
+    {
+        var name = Path.GetFileNameWithoutExtension(DocumentTitle);
+        foreach (var invalidCharacter in Path.GetInvalidFileNameChars())
+        {
+            name = name.Replace(invalidCharacter, '_');
+        }
+
+        return string.IsNullOrWhiteSpace(name) ? "검수문서" : name.Trim();
+    }
+
+    private void RaiseExportCommandState()
+    {
+        ExportDocxCommand.RaiseCanExecuteChanged();
+        ExportHwpxCommand.RaiseCanExecuteChanged();
+        ExportCommand.RaiseCanExecuteChanged();
     }
 }

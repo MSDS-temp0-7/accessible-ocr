@@ -1,5 +1,11 @@
 # AI 작업 컨텍스트: Accessible OCR
 
+> 2026-09-29 현재 검수 결과의 로컬 DOCX/HWPX 저장과 textNCX DAISY3 ZIP,
+> 사용자용 HTML 검수 보고서 생성이 구현됐다. DOCX는 앱이 직접 생성하며
+> HWPX는 설치된 한컴오피스 한/글 자동화를 사용한다. DAISY 세부 계약은
+> `docs/DAISY_EXPORT_INTEGRATION.md`를 따른다. 외부 규격 검증기와 플레이어
+> 호환성 확인은 후속 검증 대상이다.
+
 ## 설계 권한과 목표
 
 - 최우선 설계 자료: `Windows_네이티브_접근형_OCR_화면설계서_v0.2.docx`, `docs/REQUIREMENTS_DECISION_DAISY.md`
@@ -16,15 +22,28 @@
 
 - MVP 입력: PDF, 이미지, DOCX, HWP
 - 필수 출력: 완성 DAISY3(Z39.86) 패키지, 사용자용 검수 보고서
-- 보조 출력: 구조화 DOCX, 접근 가능한 HTML
-- 후속/선택 출력: HWP 직접 생성, 앱 내부 TTS·음성 파일, 점자악보
+- 현재 보조 출력: 검수 결과 DOCX, HWPX
+- 후속 보조 출력: 접근 가능한 HTML, 구형 바이너리 HWP
+- 후속/선택 출력: 앱 내부 TTS·음성 파일, 점자악보
 - 필수 접근성: Windows 내레이터·NVDA 등 외부 스크린리더와 키보드만으로 가져오기·분석·검수·내보내기 완료
 - WPF 프로세스는 모델을 직접 실행하지 않는다. 현재 `localhost:8000`의 Python 보조 프로세스가 모델을 실행하며, 운영 배치 방식은 미정이다.
 - 일반 텍스트는 CLOVA OCR이 실제 처리한다. DocLayout-YOLO는 특수 객체 위치를 실제 검출한다. 악보는 `daisy_ocr.music.adapter`가 `daisy-music`의 Audiveris/MusicXML 파이프라인을 실제 호출하며, 표·수식·그래프 전용 내용 변환은 모델팀 결과 연결 대기다.
 - CLOVA/모델 API의 실제 키는 EXE나 Git 추적 파일에 넣지 않는다. 서버 로컬 설정 위치는 `config/integration-api.env`이며 공유용 표본은 `.example` 파일이다.
-- 현재 중간 결과 계약: DAISY3 DTBook `book.xml` + 검수 사이드카 `review.json` + `pages/page-XXXX.jpg` 검수용 페이지 이미지. 이 ZIP은 완성 DAISY 산출물이 아니며, 최종 단계에서 검수 내용을 반영한 DAISY 패키지와 사용자용 검수 보고서로 변환·검증해야 한다.
+- 현재 OCR 중간 결과 계약: DAISY3 DTBook `book.xml` + 검수 사이드카
+  `review.json` + `pages/page-XXXX.jpg` 검수용 페이지 이미지. 이 ZIP 자체는
+  배포용 DAISY가 아니다. WF-08이 화면에 로드된 검수 내용을 textNCX DAISY3
+  ZIP(OPF·DTBook·NCX·SMIL)과 별도 HTML 검수 보고서로 변환한다. 앱 내부
+  무결성 검사는 구현됐으나 외부 표준 검증기 통과를 완료로 오인하지 않는다.
 - AI 결과: 확정값이 아닌 제안. 원문, AI 제안, 사용자 수정, 검수 상태를 분리해 보인다.
 - 초기 상태에는 샘플 문서나 임의 객체 수를 만들지 않는다. 검수·내보내기 요약은 실제 `book.xml`/`review.json` 결과를 읽은 뒤에만 생성한다.
+- DOCX/HWPX 내보내기는 검수 화면에 실제로 로드된 `OcrDocumentResult`만
+  사용한다. DOCX는 외부 서버·Word 설치가 필요 없고, HWPX는 한/글 2010 이상이
+  필요하지만 API 키나 OCR 서버는 필요 없다. 구형 `.hwp`로 확장자를 바꿔
+  저장하지 않는다.
+- DAISY3 내보내기도 동일한 실제 `OcrDocumentResult`만 사용한다. 음성 없는
+  `textNCX`이며 저장 ZIP에는 `package.opf`, `book.xml`, `navigation.ncx`,
+  `book.smil`만 넣는다. 같은 위치에 `*-검수보고서.html`을 생성한다. 현재
+  특수 객체는 네이티브 MathML/MusicXML/표 구조가 아니라 접근성 설명 텍스트다.
 - 검수 화면에 임의 수식·표 내용을 하드코딩하지 않는다. 특수 모델 미연결 상태는 실제 검출 영역에 명시적인 안내와 `needs_review`로 표현한다.
 - ViewModel·Model의 private setter/read-only 속성을 `ProgressBar.Value`, `Run.Text` 등에 연결할 때 `Mode=OneWay`를 명시한다. 특히 `Run.Text`의 기본 모드에 의존하지 않는다.
 - 처리되지 않은 UI 예외는 `App.xaml.cs`가 안내하고 `%LOCALAPPDATA%\AccessibleOcr\logs\app-errors.log`에 기록한다.
@@ -84,7 +103,7 @@ WF-01 Home
 - `Views`: XAML과 최소한의 UI 코드비하인드
 - `ViewModels`: 화면 상태, 명령, 유효성, 라이브 상태 문구
 - `Models`: UI 공유 모델과 열거형
-- `Services`: Windows 파일 선택, HTTP OCR Job, 결과 패키지 파서, 검수 저장 API
+- `Services`: Windows 파일 선택, HTTP OCR Job, 결과 패키지 파서, 검수 저장 API, DOCX/HWPX/DAISY3 로컬 내보내기
 - `Infrastructure`: MVVM 공통 코드
 
 View는 Service를 직접 호출하지 않는다. URL, DTO, 인증 토큰, 파일 시스템 경로는 ViewModel에 하드코딩하지 않는다.

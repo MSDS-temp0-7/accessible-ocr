@@ -9,6 +9,7 @@ public sealed class AppViewModel : ObservableObject
     private readonly IAuthenticationService _authenticationService;
     private readonly IDocumentService _documentService;
     private readonly IFilePicker _filePicker;
+    private readonly IDocumentExporter _documentExporter;
     private object _currentView;
     private MainViewModel? _main;
     private AuthenticationSession? _session;
@@ -16,11 +17,13 @@ public sealed class AppViewModel : ObservableObject
     public AppViewModel(
         IAuthenticationService authenticationService,
         IDocumentService documentService,
-        IFilePicker filePicker)
+        IFilePicker filePicker,
+        IDocumentExporter documentExporter)
     {
         _authenticationService = authenticationService;
         _documentService = documentService;
         _filePicker = filePicker;
+        _documentExporter = documentExporter;
         Login = new LoginViewModel(authenticationService, CompleteLogin, OpenSignUp, EnterDevelopmentPreview);
         SignUp = new SignUpViewModel(ReturnToLogin);
         _currentView = Login;
@@ -78,7 +81,7 @@ public sealed class AppViewModel : ObservableObject
     private void CompleteLogin(AuthenticationSession session)
     {
         Session = session;
-        Main = new MainViewModel(_documentService, _filePicker, session.User);
+        Main = new MainViewModel(_documentService, _filePicker, _documentExporter, session.User);
         Main.NavigateCommand.CanExecuteChanged += OnMainNavigateCanExecuteChanged;
         Main.StartAnalysisCommand.CanExecuteChanged += OnMainStartAnalysisCanExecuteChanged;
         CurrentView = Main;

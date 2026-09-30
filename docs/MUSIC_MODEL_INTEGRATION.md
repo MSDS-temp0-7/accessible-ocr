@@ -1,6 +1,13 @@
 # 악보 인식 모델 연결
 
-최종 갱신: 2026-09-16
+최종 갱신: 2026-09-28
+
+> 2026-09-28 실행 기준: Audiveris 5.11.0과 `qwen3:14b`를 로컬에
+> 연결했다. 악보 검출 영역은 기본적으로 사방 15% 확장해 전달하며,
+> Audiveris가 `No system found`를 반환하면 페이지 전체 폭과 35% 세로
+> 여백으로 한 번 더 자동 재시도한다. `ocr_test_sample.pdf` 3페이지의
+> 단순화된 악보 그림은 두 크롭 모두 오선 5줄만 찾고 완전한 system을 만들지
+> 못했다. 이는 설치 실패가 아니며 실제 인쇄·스캔 악보를 사용해야 한다.
 
 ## 현재 연결 상태
 
@@ -11,7 +18,7 @@
 PDF 페이지
   -> CLOVA OCR + DocLayout-YOLO
   -> 악보 문맥 페이지의 가장 큰 Picture 영역을 music으로 승격
-  -> 영역 PNG crop
+  -> 영역 PNG crop(사방 15% 확장, No system found 시 페이지 폭 재시도)
   -> daisy-music/services/music_recognizer.py
   -> Audiveris .mxl/.omr
   -> MusicXML 분석 + 신뢰도 + 검수 사유 + spokenText
@@ -33,7 +40,7 @@ Python 의존성은 루트 `pyproject.toml`에 포함되어 있으며
 
 - Java 런타임
 - Audiveris
-- 선택 사항: Ollama와 `qwen3:8b`; 없으면 모델팀 코드의 규칙 기반 요약 사용
+- 선택 사항: Ollama와 `qwen3:14b`(또는 기존 `qwen3:8b`); 없으면 모델팀 코드의 규칙 기반 요약 사용
 
 `config/integration-api.env`에 설치된 Audiveris 실행 파일 경로를 적는다.
 
@@ -42,6 +49,11 @@ MUSIC_RECOGNITION_ENABLED=true
 MUSIC_MODEL_ROOT=daisy-music
 AUDIVERIS_CMD=C:\Program Files\Audiveris\bin\Audiveris.bat
 AUDIVERIS_TIMEOUT=600
+MUSIC_SUMMARY_MODE=auto
+LOCAL_LLM_BASE_URL=http://127.0.0.1:11434
+LOCAL_LLM_MODEL=qwen3:14b
+LOCAL_LLM_THINK=false
+LOCAL_LLM_KEEP_ALIVE=0
 ```
 
 실제 설치 경로가 다르면 `AUDIVERIS_CMD`만 수정한다. 이 값은 API 키는
@@ -71,7 +83,7 @@ Audiveris가 없거나 특정 악보 인식이 실패해도 PDF Job 전체를 �
 | 앱 결과 표시 | 완료 | Music 블록, 좌표, 신뢰도, 결과 또는 실행 오류를 악보 상세 화면에 표시 |
 | 부분 실패 처리 | 완료 | 악보 모델 실패 시에도 PDF Job과 앱이 종료되지 않고 `NeedsReview` 유지 |
 | 신규 악보 Audiveris 실행 | 대기 | 현재 개발 PC에 Java와 Audiveris가 없음 |
-| 점자악보·DAISY 출력 | 미구현 | `brailleMusic`, DAISY 출력은 모델 응답에서도 아직 `null` |
+| 점자악보·악보 원형 출력 | 미구현 | 모델 응답의 `brailleMusic`과 DAISY 전용 악보 리소스는 아직 `null`; WF-08의 textNCX DAISY에는 검수된 악보 설명 텍스트만 포함 |
 
 검증 결과는 Python 자동 테스트 9건 통과, WPF Debug 빌드 경고 0개·오류
 0개다. 로컬 OCR API와 Windows 앱의 동시 실행도 확인했다.
@@ -141,7 +153,8 @@ uv sync --no-dev --no-editable --reinstall-package daisy-ocr
 
 - 영향: Audiveris·MusicXML 핵심 처리 실패로 보지 않음
 - 처리: 모델팀 코드가 규칙 기반 deterministic summary로 대체 가능
-- 필수 여부: 현재 시연의 필수 설치 대상은 Java와 Audiveris이며 Ollama는 선택
+- 필수 여부: 핵심 OMR에는 선택 사항이지만, `MUSIC_SUMMARY_MODE=auto` 시연에서는 Ollama가 우선 사용됨
+- 역할 구분: `qwen3:14b`는 MusicXML에서 검증된 텍스트 사실의 선택용이며 도표 이미지를 읽는 Qwen2.5-VL과는 별도 모델
 
 ## 재시도 확인 순서
 
